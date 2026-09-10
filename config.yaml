@@ -1,0 +1,82 @@
+# 默认纸交易。实盘还要 LIVE_TRADING=1 且启动时加 --live
+dry_run: true
+
+risk:
+  max_usd_per_trade: 50
+  max_sol_per_trade: 0.05
+  max_open_positions: 4
+  max_daily_trades: 12
+  max_daily_loss_usd: 80
+  cooldown_sec: 900
+  max_leverage: 2
+  min_confidence: 0.7
+  max_slippage: 0.01
+  min_hl_notional_usd: 12
+  allow_update_pending: true
+
+channels:
+  # 合约 + meme 置信度较高：正常仓，允许 perp / 土狗
+  - username: POPIGOGO
+    enabled: true
+    style: high_conviction
+    min_confidence: 0.68
+    confidence_boost: 0.08
+    default_symbol: BTC
+    inherit_context: true
+    require_explicit: false
+    allow_perp: true
+    allow_meme: true
+    perp:
+      usd: 80
+      leverage: 3
+    meme:
+      usd: 60
+      sol: 0.08
+
+  # meme 当小仓测试，不跟合约
+  - username: Theabyssofgambling
+    enabled: true
+    style: probe
+    min_confidence: 0.74
+    confidence_boost: 0.0
+    default_symbol: null
+    inherit_context: true
+    require_explicit: false
+    allow_perp: false
+    allow_meme: true
+    perp:
+      usd: 0
+      leverage: 1
+    meme:
+      usd: 12
+      sol: 0.012
+
+  # 看情况：只要消息里写明标的的开/平仓，复盘和空泛评论一律跳过
+  - username: sleepingclub0
+    enabled: true
+    style: discretionary
+    min_confidence: 0.84
+    confidence_boost: -0.05
+    default_symbol: null
+    inherit_context: false
+    require_explicit: true
+    allow_perp: true
+    allow_meme: false
+    perp:
+      usd: 40
+      leverage: 2
+    meme:
+      usd: 0
+      sol: 0.0
+
+venues:
+  hyperliquid:
+    enabled: true
+    reconcile_interval_sec: 30
+  solana:
+    enabled: true
+    quote_source: gmgn
+    # meme 市价单立刻走 GMGN，不在本地等下一根 K 线
+    execution: gmgn
+    immediate: true
+    poll_sec: 2.5
