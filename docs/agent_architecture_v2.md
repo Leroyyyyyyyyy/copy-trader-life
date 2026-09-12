@@ -1,6 +1,6 @@
 # Tradelife Agent 学习与实施手册
 
-> 合并版 v3.4 · 2026-09-10。本文是项目架构、CMU 课程映射和 RL 系统设计的唯一维护入口。  
+> 合并版 v3.5 · 2026-09-12。本文是项目架构、CMU 课程映射和 RL 系统设计的唯一维护入口。  
 > 目标：通过 Tradelife 学习并应用 agent 知识。当前仍为设计文档；新增模块、实验、训练均未实施。  
 > 课程及框架资料沿用 2026-09-09 的核对结果；本版根据课程对照审查补齐实验契约，未重新核实课程安排。
 
@@ -436,6 +436,64 @@ RL 训练增加独立的 reward scorer，验证集用于选型，锁定测试集
 harness 验收后，再完成独立评测：固定任务划分与评分版本，批量运行已登记实验，保存逐例结果、失败与超时，核对不同模型和观察方式的差异。评分器读取独立环境终态和证据；不能以 agent 自报“成功”作为完成依据。
 
 至少覆盖三类结果：协议正确性（工具调用是否合法）、任务正确性（目标与证据是否满足）、运行代价（token、调用次数、时间）。格式正确但改错计划，仍是任务失败；没有发出任何动作也不能因为无效调用率低就算通过。先登记指标、终止规则与预算，再运行实验。
+
+
+<a id="deepeval"></a>
+
+### 2.3 DeepEval 接入决策
+
+**采用 DeepEval 作为评测框架，保留项目自己的确定性业务 verifier。** F0 先完成离线单例判定，harness 产生稳定轨迹后接入 DeepEval，A2 完成批量与语义评测。当前仅写入设计，未安装依赖或实现适配器。
+
+DeepEval 提供端到端、组件、轨迹评测及自定义指标；本项目通过适配层使用这些能力。[官方介绍](https://deepeval.com/docs/introduction) · [自定义指标](https://deepeval.com/docs/metrics-custom)
+
+#### 2.3.1 分工与数据流
+
+```text
+固定任务 + 初始模拟状态 → Agent 执行
+                              ↓
+                 最终答案 + 原始 trace + 最终环境快照
+                              ↓
+EvalRunner（项目入口）
+  ├─ 业务 verifier：计划、价格、终态、幂等、权限、证据
+  ├─ DeepEvalAdapter → 工具指标、自定义 metric、LLM judge
+  └─ CaseScore：硬检查、语义分数、耗时与成本分别保存
+```
+
+EvalSpec 与预期答案仅提供给评测器，不进入 agent 观察或记忆。先执行一次 agent 并持久化证据，再按相同证据运行各指标；不要为每个 metric 重跑会改变状态的任务。选择并脱敏后才向 judge 提供所需材料，模拟数据库不作为 judge 可自由操作的工具。
+
+| 检查内容 | 实现方式 | 判定角色 |
+|---|---|---|
+| 计划引用、价格、最终状态、非目标计划未变 | 自定义确定性 verifier，可包装为 DeepEval custom metric | 任务硬判定 |
+| schema、权限、状态版本、重复提交和预算 | 代码检查与 commit/event 记录 | 协议/系统硬判定 |
+| 必要工具与已知参数匹配 | `ToolCorrectnessMetric` | 工具诊断；确定规则可参与硬判定 |
+| 解释是否有证据、歧义处理是否合理 | 自定义 rubric 的 `GEval` | 语义辅助分数 |
+| 多步轨迹是否完成目标 | `TaskCompletionMetric` | 轨迹语义辅助，不覆盖终态验证 |
+| token、工具次数、延迟、人工审核负担 | 从项目 trace 统计 | 性能与交互指标 |
+
+`ToolCorrectnessMetric` 可匹配工具名称、参数或输出；提供 `available_tools` 时还会引入 LLM 对工具选择的评价，实施时固定这些选项并区分模式。[工具正确性](https://deepeval.com/docs/metrics-tool-correctness)
+
+`GEval` 用于自定义语义标准；`TaskCompletionMetric` 使用 LLM-as-a-judge，其评分不证明状态变更真的发生。[指标介绍](https://deepeval.com/docs/metrics-introduction) · [任务完成度](https://deepeval.com/docs/metrics-task-completion)
+
+#### 2.3.2 样例与通过规则
+
+教学任务：“把 ETH 计划 A 的止损移到已知成本价 1800。”初始快照与隐藏标签已确认操作合法。
+
+代码 verifier 检查：引用 A、最终 SL 为 1800、其他计划不变、只提交一次、证据与状态版本满足约束；DeepEval 评工具选择与解释依据。只回答“已经修改”但数据库未变，判失败；操作正确但解释缺证据，分别记录硬检查通过和语义不足。
+
+结果分列 `hard_pass`、`semantic_scores`、`system_metrics`，不使用可相互抵消的总平均分。任何必需硬检查失败即验收失败；需要语义门槛的实验另行预登记阈值。judge 超时或评分失败记为 `eval_error`，不当作 agent 错误或通过；报告评测覆盖率，对同一已存轨迹重试评分。
+
+允许多条合理工具路径时检查必要动作、参数与效果，不强制全部顺序一致；只有顺序本身是任务约束时才严格匹配。Judge 的高分不能放宽权限、幂等或状态约束。
+
+#### 2.3.3 实施顺序与适配器验收
+
+1. **F0**：先写纯代码 verifier 和正确/错误样例，无需 judge 服务；明确任务怎样才算正确。
+2. **F1–F3 后**：将稳定答案、工具调用、证据与轨迹转换为相应 DeepEval 测试对象。需要轨迹的指标不能只传最终回答。
+3. **A2**：接工具匹配与自定义 metric，运行批量实验；再增加用人工审核样例校准的 GEval/TaskCompletion，记录 judge 模型、rubric、metric 配置、框架版本、输入 hash、分数原因与费用。
+4. **验证适配**：直接 verifier 与包装指标结果必须一致；并发/嵌套调用的 ID、次数与顺序约束不能丢失。覆盖错误计划、只口头成功、重复提交、合理替代路径及 judge 不可用。
+
+拟议文件为 `src/lab/evals/deepeval_adapter.py` 与 `custom_metrics.py`。领域对象不继承框架测试类，原始 trace 仍由项目保管；先保存本地报告，外部平台上传不是本阶段必需。实施时固定版本并核对数据发送配置。本次没有配置账户、上传数据或调用 judge。
+
+本人答辩应能说明：DeepEval 帮助运行指标和评估语义；任务正确性由环境状态与证据契约定义；LLM judge 需要校准、会出错，不能替代事务终态检查。框架能力已依据官方资料于 2026-09-12 核对，实际 API 以实施时验证为准。
 
 
 <a id="l1"></a>
@@ -1229,6 +1287,8 @@ src/
     evals/
       loader.py / verifiers.py     # 隐藏标签与独立判分
       runner.py / reports.py       # 单例/批量与逐例汇总
+      deepeval_adapter.py          # 项目结果到框架测试对象
+      custom_metrics.py            # 包装业务 verifier，保持语义一致
 
 experiments/
   manifests/                       # 模型/预算/版本/实验矩阵
