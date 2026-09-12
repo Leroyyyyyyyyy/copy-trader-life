@@ -8,24 +8,27 @@
 - **接手实施**：[handoff.md](handoff.md)，包含真实状态、下一批工作与可复制提示。
 - README 维护入口与运行说明，handoff 维护进度，手册维护设计与验收；不复制成三份架构。
 
-## 当前状态（2026-09-10）
+## 当前状态（2026-09-12）
 
 | 部分 | 状态 |
 |---|---|
 | 原有 Telegram → parser → Engine → Hyperliquid/Solana 代码 | 已存在，是业务与测试基线 |
 | L0–L7 模块、接口、实验、恢复、eval 与人工复核设计 | 已完成文档 |
-| `src/lab/`、`tests/lab/`、`experiments/` | 尚未实现 |
-| 当前接手起点 | F0：TaskSpec/EvalSpec、冻结样例、独立单例 verifier |
+| F0：`TaskSpec`/`EvalSpec`、冻结样例、单例 verifier | 已实现（离线，无 LLM/venue） |
+| `src/lab/` 其余模块、`tests/lab/` 除 F0 外 | 尚未实现 |
+| 当前接手起点 | F1：共用 harness、两环境、模拟 gateway |
 | 当前终点 | F7 / L7：人工审核、恢复和完整批量 eval |
 | L8–L11、SFT/RL、推理集群与模型发布 | 后续资料，不属于本次实施 |
 
-这次更新只修改文档，未启动应用、训练或部署，也未重跑测试。历史 testnet 和测试记录见 handoff，不代表当前环境已验证。
+F0 实测：`python -m unittest tests.lab.test_f0_verifier -v`（13 passed）。历史 testnet 记录见 handoff，不代表当前交易环境已验证。
 
 ## 实施方式
 
 按手册 F0–F7 分批交付可运行增量，在 `src/lab/` 建立独立模拟实验框架，保留原有业务入口。每批提供真实检查结果、关键路径讲解、trace 与本人理解练习；代码通过和本人已掌握分别记录。
 
 初期使用 stub 模型、SQLite/文件、只读或模拟工具；L5 才加入 LangGraph 对照，L7 先用 CLI 复核。H1/H2/H3、压缩、记忆与 Skills 实验都在手册中。Lab 的命令与依赖尚未实现，手册配置不是可运行 CLI。
+
+评测选型：**DeepEval + 项目确定性 verifier**，详见手册 [2.3 节](docs/agent_architecture_v2.md#deepeval)。F0 已实现离线确定性 verifier；DeepEval 适配器仍待 harness 稳定后接入。
 
 ## 现有代码基线
 
@@ -51,7 +54,16 @@ python -m pip install -r requirements.txt
 python -m unittest tests.test_parser tests.test_risk -v
 ```
 
-解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。本轮未重跑测试。新 lab 用例未来放在 `tests/lab/`，其发现方式随实现补入本节。
+解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。
+
+Lab F0（离线判分，不改 `data/state.json`）：
+
+```bash
+python -m unittest tests.lab.test_f0_verifier -v
+python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
+```
+
+观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。
 
 ## 现有纸交易入口（非新 lab）
 

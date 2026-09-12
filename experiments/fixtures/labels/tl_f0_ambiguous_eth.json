@@ -1,0 +1,43 @@
+{
+  "task_id": "tl_f0_ambiguous_eth",
+  "family_id": "exit_protect_update",
+  "material_version": "f0.1",
+  "verifier_version": "f0.plan_sl.v1",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "review",
+      "referenced_plan_id": null,
+      "allow_unchanged": true,
+      "notes": "Two candidate ETH plans; do not silently update one"
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_eth_1",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2100,
+      "state_version": 2,
+      "note": "from A1"
+    },
+    {
+      "plan_id": "plan_eth_2",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1900,
+      "stop_loss": 1750,
+      "take_profit": 2300,
+      "state_version": 2,
+      "note": "from A2"
+    }
+  ]
+}

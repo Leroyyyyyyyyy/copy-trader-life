@@ -1,0 +1,10 @@
+{
+  "task_id": "tl_f0_move_sl_plan_a",
+  "family_id": "exit_protect_update",
+  "split": "smoke",
+  "environment_kind": "plan_simulation",
+  "objective": "Message C asks to move the long stop to cost. Update the matching filled ETH plan stop_loss to the known cost 1800.",
+  "observation_bundle_id": "tl_f0_move_sl_plan_a",
+  "visible_at": "2026-09-01T12:00:00Z",
+  "initial_snapshot_id": "snap_tl_f0_move_sl_plan_a_v1"
+}

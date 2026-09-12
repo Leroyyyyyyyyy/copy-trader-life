@@ -1,0 +1,10 @@
+{
+  "task_id": "tl_f0_ambiguous_eth",
+  "family_id": "exit_protect_update",
+  "split": "smoke",
+  "environment_kind": "plan_simulation",
+  "objective": "Message C says move the long stop to cost, but two filled ETH plans exist. Prefer review rather than guessing.",
+  "observation_bundle_id": "tl_f0_ambiguous_eth",
+  "visible_at": "2026-09-01T12:00:00Z",
+  "initial_snapshot_id": "snap_tl_f0_ambiguous_eth_v1"
+}

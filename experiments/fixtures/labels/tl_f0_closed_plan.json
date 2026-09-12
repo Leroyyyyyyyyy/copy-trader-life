@@ -1,0 +1,47 @@
+{
+  "task_id": "tl_f0_closed_plan",
+  "family_id": "exit_protect_update",
+  "material_version": "f0.1",
+  "verifier_version": "f0.plan_sl.v1",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "ignore",
+      "allow_unchanged": true,
+      "notes": "Target plan already closed"
+    },
+    {
+      "kind": "review",
+      "allow_unchanged": true,
+      "notes": "Also acceptable to escalate"
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_a",
+      "symbol": "ETH",
+      "status": "closed",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2200,
+      "state_version": 5,
+      "note": "already flat"
+    },
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 108000,
+      "stop_loss": 100000,
+      "take_profit": 120000,
+      "state_version": 2,
+      "note": "still open"
+    }
+  ]
+}

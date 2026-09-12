@@ -1,0 +1,44 @@
+{
+  "task_id": "tl_f0_move_sl_plan_a",
+  "family_id": "exit_protect_update",
+  "material_version": "f0.1",
+  "verifier_version": "f0.plan_sl.v1",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "update",
+      "referenced_plan_id": "plan_a",
+      "stop_loss": 1800,
+      "require_state_change": true,
+      "notes": "Move ETH plan A stop to known cost 1800"
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_a",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2200,
+      "state_version": 3,
+      "note": "opened from message A"
+    },
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 108000,
+      "stop_loss": 100000,
+      "take_profit": 120000,
+      "state_version": 2,
+      "note": "unrelated open BTC plan"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "bundle_id": "tl_f0_ambiguous_eth",
+  "messages": [
+    {
+      "message_id": "A1",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-09-01T09:00:00Z",
+      "text": "ETH 多单一，图里有触发和止损。",
+      "image_refs": ["chart_eth_1"]
+    },
+    {
+      "message_id": "A2",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-09-01T10:30:00Z",
+      "text": "ETH 又做了一张条件多。",
+      "image_refs": ["chart_eth_2"]
+    },
+    {
+      "message_id": "C",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-09-01T12:00:00Z",
+      "text": "这张多单止损移到成本。",
+      "image_refs": []
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "plan_eth_1",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2100,
+      "state_version": 2,
+      "note": "from A1"
+    },
+    {
+      "plan_id": "plan_eth_2",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1900,
+      "stop_loss": 1750,
+      "take_profit": 2300,
+      "state_version": 2,
+      "note": "from A2"
+    }
+  ],
+  "chart_notes": [
+    "Two ETH longs; message C does not name which one."
+  ],
+  "account_note": "Teaching fixture for ambiguity → review."
+}

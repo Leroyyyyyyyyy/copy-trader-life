@@ -1,0 +1,41 @@
+{
+  "task_id": "tl_f0_move_sl_plan_a",
+  "run_id": "hand_correct",
+  "decision": {
+    "kind": "update",
+    "referenced_plan_id": "plan_a",
+    "proposed_changes": {"stop_loss": 1800},
+    "evidence_refs": ["message:C", "plan:plan_a", "chart:chart_eth_a"],
+    "claimed_success": false,
+    "expected_state_version": 3
+  },
+  "final_snapshot": {
+    "submit_count": 1,
+    "state_version": 4,
+    "plans": [
+      {
+        "plan_id": "plan_a",
+        "symbol": "ETH",
+        "status": "filled",
+        "side": "buy",
+        "cost_basis": 1800,
+        "stop_loss": 1800,
+        "take_profit": 2200,
+        "state_version": 4,
+        "note": "opened from message A"
+      },
+      {
+        "plan_id": "plan_btc",
+        "symbol": "BTC",
+        "status": "filled",
+        "side": "buy",
+        "cost_basis": 108000,
+        "stop_loss": 100000,
+        "take_profit": 120000,
+        "state_version": 2,
+        "note": "unrelated open BTC plan"
+      }
+    ]
+  },
+  "trace": {"tool_calls": 2, "claimed_done_without_submit": false}
+}

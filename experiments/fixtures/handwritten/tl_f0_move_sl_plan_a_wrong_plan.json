@@ -1,0 +1,40 @@
+{
+  "task_id": "tl_f0_move_sl_plan_a",
+  "run_id": "hand_wrong_plan",
+  "decision": {
+    "kind": "update",
+    "referenced_plan_id": "plan_btc",
+    "proposed_changes": {"stop_loss": 1800},
+    "evidence_refs": ["message:C"],
+    "claimed_success": false
+  },
+  "final_snapshot": {
+    "submit_count": 1,
+    "state_version": 3,
+    "plans": [
+      {
+        "plan_id": "plan_a",
+        "symbol": "ETH",
+        "status": "filled",
+        "side": "buy",
+        "cost_basis": 1800,
+        "stop_loss": 1650,
+        "take_profit": 2200,
+        "state_version": 3,
+        "note": "opened from message A"
+      },
+      {
+        "plan_id": "plan_btc",
+        "symbol": "BTC",
+        "status": "filled",
+        "side": "buy",
+        "cost_basis": 108000,
+        "stop_loss": 1800,
+        "take_profit": 120000,
+        "state_version": 3,
+        "note": "unrelated open BTC plan"
+      }
+    ]
+  },
+  "trace": {"tool_calls": 2}
+}

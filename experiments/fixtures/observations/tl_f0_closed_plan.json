@@ -1,0 +1,45 @@
+{
+  "bundle_id": "tl_f0_closed_plan",
+  "messages": [
+    {
+      "message_id": "A",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-09-01T10:00:00Z",
+      "text": "ETH 条件多单。",
+      "image_refs": ["chart_eth_a"]
+    },
+    {
+      "message_id": "C",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-09-01T12:00:00Z",
+      "text": "这张多单止损移到成本。",
+      "image_refs": []
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "plan_a",
+      "symbol": "ETH",
+      "status": "closed",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2200,
+      "state_version": 5,
+      "note": "already flat"
+    },
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 108000,
+      "stop_loss": 100000,
+      "take_profit": 120000,
+      "state_version": 2,
+      "note": "still open"
+    }
+  ],
+  "chart_notes": [],
+  "account_note": "Teaching fixture: closed target plan."
+}
