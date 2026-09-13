@@ -1,7 +1,7 @@
 # Tradelife 交接 · 当前执行 L0–L7
 
-> 更新：2026-09-12（F0 已落地：契约、冻结样例、单例 verifier + 13 测通过）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
-> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 F1。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
+> 更新：2026-09-13（L2 已落地：ContextBuilder、达到阈值才压缩、原始 trace 不变；L3 memory/Skills 未做）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
+> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 L3（同属 F2）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
 
 ## 1. 用户目标和协作要求
 
@@ -16,23 +16,25 @@
 | 原有 `src/` 与 `tests/` | 已存在；可作为领域行为和回归素材 |
 | 框架规格、学习验收与本人答辩要求 | 已写入手册 |
 | F0 `src/lab/domain.py` + `src/lab/evals/` + fixtures | 已实现；`tests.lab.test_f0_verifier` 13 passed |
-| F1+ harness / runtime / environments | 尚未实现 |
-| 凭证、网络与账户状态 | 本轮未核验 live；F0 不依赖 |
+| F1 harness / runtime / stub / 两环境 / SimulationGateway | 已实现；`tests.lab.test_f1_harness` 覆盖成功/恢复/预算/幂等 |
+| L2 ContextBuilder / 压缩 | 已实现；`tests.lab.test_l2_context` 覆盖触发压缩、对照、错误摘要、回退 |
+| L3 memory / Skills | 尚未实现 |
+| 凭证、网络与账户状态 | 本轮未核验 live；lab 不依赖 |
 | Git | 仓库存在；提交与否由本人决定 |
 
 先读 [README](README.md)，再读手册 [1.7 框架规格](docs/agent_architecture_v2.md#framework-l0-l7)、[1.8 制作与答辩](docs/agent_architecture_v2.md#coding-and-defense)及第 13.1 节目录。随后只读当前批次对应验收，不需要先实现后半本训练架构。
 
 接手先核对文件与已有修改；若别的 agent 已有成果，应保留并从真实完成位置继续，不按旧状态覆盖工作。
 
-## 3. 下一批做 F1（F0 已完成）
+## 3. 下一批做 L3（F0–F1 与 L2 已完成）
 
-F0 已交付：观察/标签分路径、`tl_f0_*` 教学样例、`verify_plan_decision` 单例 verifier、手写正误结果与 `tests.lab.test_f0_verifier`。理解练习是否完成由本人标记，不由 agent 代认。
+L2 已交付：`ContextBuilder` 按 `full` / `recent` / `compact` 重建当轮输入；压缩不改 RunStore 原始事件；保留最近完整动作–观察对；摘要引用 `source_event_ids`；不可压缩前缀超预算则 `context_budget_error`。实测：`python -m unittest tests.lab.test_l2_context -v`。摘要目前是抽取式 stub，不是 LLM。
 
-F1 目标见手册 1.7.10：domain 扩展、RunStore、共用 harness、stub 模型、两个环境、工具分发与模拟 gateway。同一 loop 跑两环境；成功/错误/取消可追踪；重复提交不重复生效。
+L3 目标见手册 4.2 / 4.7：SQLite memory、SkillRegistry、按需加载、跨 run 隔离。F2 整批在 L3 完成后才算收口。
 
-评测框架仍是 **DeepEval + 自定义确定性 verifier**（手册 [2.3](docs/agent_architecture_v2.md#deepeval)）。DeepEval 适配器等 harness 稳定后再接；硬检查失败不能被 judge 高分抵消。
+评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。
 
-按 F1→F7 继续可评审增量。已授权范围内不需要每改一个文件都重新申请确认；遇到必要缺失输入时单独说明。
+按 F2→F7 继续可评审增量。已授权范围内不需要每改一个文件都重新申请确认；遇到必要缺失输入时单独说明。
 
 ## 4. 实施边界与代码线索
 
@@ -78,8 +80,8 @@ F1 目标见手册 1.7.10：domain 扩展、RunStore、共用 harness、stub 模
 1.7 框架、1.8 制作与答辩要求、13.1 目录，以及当前批次验收。
 架构手册是唯一设计来源，不再新建第二份架构文档。
 
-先核对实际文件与已有修改。F0 已落地则从 F1 harness 继续；若 F0 缺失，
-先补任务/隐藏标签分离、教学样例和独立单例 verifier。保留已有成果，不要覆盖。
+先核对实际文件与已有修改。F0–F1 与 L2 已落地则从 L3 继续；若更早批次缺失，
+从真实缺口补起。保留已有成果，不要覆盖。
 每批给出可运行增量、实际检查结果、关键代码和 trace 讲解、本人理解练习。
 代码验证与本人理解分别记录，不代替本人认定已掌握。
 

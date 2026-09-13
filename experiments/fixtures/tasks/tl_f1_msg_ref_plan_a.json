@@ -1,0 +1,10 @@
+{
+  "task_id": "tl_f1_msg_ref_plan_a",
+  "family_id": "message_plan_link",
+  "split": "smoke",
+  "environment_kind": "message_analysis",
+  "objective": "Decide which plan message C refers to. Submit update for plan_a with evidence. Do not mutate account fields.",
+  "observation_bundle_id": "tl_f0_move_sl_plan_a",
+  "visible_at": "2026-09-01T12:00:00Z",
+  "initial_snapshot_id": "snap_tl_f1_msg_ref_plan_a_v1"
+}
