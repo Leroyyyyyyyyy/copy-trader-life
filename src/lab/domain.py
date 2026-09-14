@@ -44,6 +44,21 @@ class ToolStatus(str, Enum):
     ERROR = "error"
 
 
+class MemoryStatus(str, Enum):
+    ACTIVE = "active"
+    SUPERSEDED = "superseded"
+    EXPIRED = "expired"
+    DELETED = "deleted"
+    CANDIDATE = "candidate"
+
+
+class MemoryType(str, Enum):
+    FACT = "fact"
+    EPISODE = "episode"
+    PROCEDURE = "procedure"
+    EVAL = "eval"
+
+
 @dataclass(frozen=True)
 class TaskSpec:
     task_id: str
@@ -180,6 +195,37 @@ class CaseScore:
 
 def plan_map(plans: tuple[PlanView, ...] | list[PlanView]) -> dict[str, PlanView]:
     return {p.plan_id: p for p in plans}
+
+
+@dataclass(frozen=True)
+class MemoryRecord:
+    memory_id: str
+    memory_type: MemoryType
+    scope: str
+    content: str
+    source_event_id: Optional[str] = None
+    confidence: float = 1.0
+    valid_from: Optional[str] = None
+    valid_to: Optional[str] = None
+    version: int = 1
+    status: MemoryStatus = MemoryStatus.ACTIVE
+    supersedes: Optional[str] = None
+    snapshot_id: str = ""
+
+    def to_agent_dict(self) -> dict[str, Any]:
+        return {
+            "memory_id": self.memory_id,
+            "memory_type": self.memory_type.value,
+            "scope": self.scope,
+            "content": self.content,
+            "source_event_id": self.source_event_id,
+            "confidence": self.confidence,
+            "valid_from": self.valid_from,
+            "valid_to": self.valid_to,
+            "version": self.version,
+            "status": self.status.value,
+            "supersedes": self.supersedes,
+        }
 
 
 @dataclass(frozen=True)

@@ -43,7 +43,10 @@ class ToolDispatcher:
                 retryable=True,
             )
         try:
-            result = self.environment.handle_tool(call.name, call.arguments)
+            if spec.handler is not None:
+                result = spec.handler(call.arguments)
+            else:
+                result = self.environment.handle_tool(call.name, call.arguments)
         except Exception as exc:  # noqa: BLE001 - surface as tool observation
             return ToolResult(
                 call_id=call.call_id,

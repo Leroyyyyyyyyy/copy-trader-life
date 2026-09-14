@@ -94,6 +94,9 @@ class ContextBuilder:
         tools: list[dict[str, Any]],
         state_version: int,
         events: list[dict[str, Any]],
+        memories: list[dict[str, Any]] | None = None,
+        skill_catalog: list[dict[str, Any]] | None = None,
+        loaded_skills: list[dict[str, Any]] | None = None,
     ) -> tuple[dict[str, Any], Optional[CompactionRecord]]:
         groups = group_history(events)
         pinned = {
@@ -102,6 +105,9 @@ class ContextBuilder:
             "world": world,
             "tools": tools,
             "state_version": state_version,
+            "memories": list(memories or []),
+            "skill_catalog": list(skill_catalog or []),
+            "loaded_skills": list(loaded_skills or []),
         }
         record: Optional[CompactionRecord] = None
         history_for_model: dict[str, Any]

@@ -1,7 +1,7 @@
 # Tradelife 交接 · 当前执行 L0–L7
 
-> 更新：2026-09-13（L2 已落地：ContextBuilder、达到阈值才压缩、原始 trace 不变；L3 memory/Skills 未做）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
-> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 L3（同属 F2）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
+> 更新：2026-09-13（F2 收口：L2 压缩 + L3 SQLite memory / SkillRegistry 按需加载）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
+> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 F3（H2/H3）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
 
 ## 1. 用户目标和协作要求
 
@@ -17,8 +17,9 @@
 | 框架规格、学习验收与本人答辩要求 | 已写入手册 |
 | F0 `src/lab/domain.py` + `src/lab/evals/` + fixtures | 已实现；`tests.lab.test_f0_verifier` 13 passed |
 | F1 harness / runtime / stub / 两环境 / SimulationGateway | 已实现；`tests.lab.test_f1_harness` 覆盖成功/恢复/预算/幂等 |
-| L2 ContextBuilder / 压缩 | 已实现；`tests.lab.test_l2_context` 覆盖触发压缩、对照、错误摘要、回退 |
-| L3 memory / Skills | 尚未实现 |
+| L2 ContextBuilder / 压缩 | 已实现；`tests.lab.test_l2_context` |
+| L3 SQLite memory / SkillRegistry | 已实现；`tests.lab.test_l3_memory_skills` |
+| F3 H2/H3 观察消融与沙箱 | 尚未实现 |
 | 凭证、网络与账户状态 | 本轮未核验 live；lab 不依赖 |
 | Git | 仓库存在；提交与否由本人决定 |
 
@@ -26,11 +27,11 @@
 
 接手先核对文件与已有修改；若别的 agent 已有成果，应保留并从真实完成位置继续，不按旧状态覆盖工作。
 
-## 3. 下一批做 L3（F0–F1 与 L2 已完成）
+## 3. 下一批做 F3（F0–F2 已完成）
 
-L2 已交付：`ContextBuilder` 按 `full` / `recent` / `compact` 重建当轮输入；压缩不改 RunStore 原始事件；保留最近完整动作–观察对；摘要引用 `source_event_ids`；不可压缩前缀超预算则 `context_budget_error`。实测：`python -m unittest tests.lab.test_l2_context -v`。摘要目前是抽取式 stub，不是 LLM。
+L3 已交付：`MemoryStore`（过期/更正/冲突/overlay 隔离、拒绝 label）；`SkillRegistry` 读 `experiments/skill_library/`；`skill_mode=none|catalog|preload`；`invoke_skill` 不扩大工具集；新 run 不继承已加载正文。实测：`python -m unittest tests.lab.test_l3_memory_skills -v`。
 
-L3 目标见手册 4.2 / 4.7：SQLite memory、SkillRegistry、按需加载、跨 run 隔离。F2 整批在 L3 完成后才算收口。
+F3 目标见手册 1.7.10：H2 两模型×观察矩阵、H3 SandboxExecutor。无合格沙箱则 H3 明确未完成。
 
 评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。
 
@@ -80,7 +81,7 @@ L3 目标见手册 4.2 / 4.7：SQLite memory、SkillRegistry、按需加载、�
 1.7 框架、1.8 制作与答辩要求、13.1 目录，以及当前批次验收。
 架构手册是唯一设计来源，不再新建第二份架构文档。
 
-先核对实际文件与已有修改。F0–F1 与 L2 已落地则从 L3 继续；若更早批次缺失，
+先核对实际文件与已有修改。F0–F2 已落地则从 F3 继续；若更早批次缺失，
 从真实缺口补起。保留已有成果，不要覆盖。
 每批给出可运行增量、实际检查结果、关键代码和 trace 讲解、本人理解练习。
 代码验证与本人理解分别记录，不代替本人认定已掌握。

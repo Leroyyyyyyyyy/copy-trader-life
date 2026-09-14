@@ -11,18 +11,24 @@ from src.lab.domain import (
     CompactionConfig,
     CompactionRecord,
     DecisionKind,
+    MemoryRecord,
+    MemoryType,
     RunBudget,
     RunStatus,
     SubmittedDecision,
     TaskSpec,
+    ToolResult,
     ToolStatus,
     Usage,
 )
 from src.lab.execution.simulation import SimulationGateway
+from src.lab.memory.store import LabelInMemoryError, MemoryStore, memories_for_prompt
 from src.lab.models.base import ModelAdapter
 from src.lab.runtime.budget import BudgetExceeded, BudgetTracker
 from src.lab.runtime.store import RunStore
+from src.lab.skills.registry import SkillRegistry
 from src.lab.tools.dispatcher import ToolDispatcher
+from src.lab.tools.registry import ToolSpec
 
 
 class AgentHarness:
@@ -35,13 +41,104 @@ class AgentHarness:
         budget: RunBudget | None = None,
         context_builder: ContextBuilder | None = None,
         compaction: CompactionConfig | None = None,
+        memory: MemoryStore | None = None,
+        skills: SkillRegistry | None = None,
+        skill_mode: str = "none",
     ):
         self.store = store
         self.model = model
         self.environment = environment
         self.budget = BudgetTracker(budget or RunBudget())
-        self.dispatcher = ToolDispatcher(environment.tool_registry(), environment)
         self.context = context_builder or ContextBuilder(compaction or CompactionConfig())
+        self.memory = memory
+        self.skills = skills
+        self.skill_mode = skill_mode
+        self._loaded_skill_names: set[str] = set()
+        self.dispatcher = ToolDispatcher(self._tool_registry(), environment)
+
+    def _tool_registry(self):
+        registry = self.environment.tool_registry()
+        if self.skills is not None and self.skill_mode != "none":
+            registry.register(
+                ToolSpec(
+                    name="invoke_skill",
+                    description="Load one skill body by name. Does not add tools.",
+                    mutating=False,
+                    required_args=("name",),
+                    handler=self._handle_invoke_skill,
+                )
+            )
+        if self.memory is not None:
+            registry.register(
+                ToolSpec(
+                    name="propose_memory",
+                    description="Propose a candidate memory for this run only",
+                    mutating=False,
+                    required_args=("content",),
+                    handler=self._handle_propose_memory,
+                )
+            )
+        return registry
+
+    def _handle_invoke_skill(self, arguments: dict[str, Any]) -> Any:
+        assert self.skills is not None
+        out = self.skills.invoke(str(arguments["name"]))
+        if out.get("error_code"):
+            return ToolResult(
+                call_id="",
+                name="invoke_skill",
+                status=ToolStatus.ERROR,
+                error_code=str(out["error_code"]),
+                retryable=True,
+                payload=out,
+            )
+        self._loaded_skill_names.add(str(out["name"]))
+        return out
+
+    def _handle_propose_memory(self, arguments: dict[str, Any]) -> Any:
+        assert self.memory is not None
+        try:
+            rec = self.memory.propose(
+                MemoryRecord(
+                    memory_id="",
+                    memory_type=MemoryType(arguments.get("memory_type", "fact")),
+                    scope=str(arguments.get("scope", "*")),
+                    content=str(arguments["content"]),
+                    source_event_id=arguments.get("source_event_id"),
+                )
+            )
+        except LabelInMemoryError as exc:
+            return ToolResult(
+                call_id="",
+                name="propose_memory",
+                status=ToolStatus.ERROR,
+                error_code="label_in_memory",
+                retryable=False,
+                payload={"error": str(exc)},
+            )
+        return rec.to_agent_dict()
+
+    def _skill_prompt_bits(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        if self.skills is None or self.skill_mode == "none":
+            return [], []
+        catalog = self.skills.catalog()
+        loaded: list[dict[str, Any]] = []
+        names = (
+            self.skills.names()
+            if self.skill_mode == "preload"
+            else sorted(self._loaded_skill_names)
+        )
+        for name in names:
+            body = self.skills.invoke(name)
+            if not body.get("error_code"):
+                loaded.append(body)
+        return catalog, loaded
+
+    def _memory_prompt_bits(self, task: TaskSpec) -> list[dict[str, Any]]:
+        if self.memory is None:
+            return []
+        hits = self.memory.retrieve(visible_at=task.visible_at, include_overlay=True)
+        return memories_for_prompt(hits)
 
     def run(self, task: TaskSpec, *, run_id: Optional[str] = None) -> AgentResult:
         run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
@@ -66,6 +163,8 @@ class AgentHarness:
             terminal_reason=None,
             payload={"task_id": task.task_id},
         )
+        self._loaded_skill_names = set()
+        self.dispatcher = ToolDispatcher(self._tool_registry(), self.environment)
         emit("run_started", {"task_id": task.task_id})
 
         terminal_reason = "succeeded"
@@ -82,13 +181,17 @@ class AgentHarness:
                     break
 
                 env_prompt = self.environment.build_prompt(task, observations)
+                catalog, loaded = self._skill_prompt_bits()
                 try:
                     request, crecord = self.context.build(
                         task,
                         world=env_prompt.get("world") or {},
-                        tools=env_prompt.get("tools") or [],
+                        tools=self.dispatcher.registry.schemas(),
                         state_version=int(env_prompt.get("state_version") or 0),
                         events=events,
+                        memories=self._memory_prompt_bits(task),
+                        skill_catalog=catalog,
+                        loaded_skills=loaded,
                     )
                 except ContextBudgetError as exc:
                     terminal_reason = f"context_budget_error:{exc}"
