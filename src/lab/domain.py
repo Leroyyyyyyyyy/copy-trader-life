@@ -240,6 +240,7 @@ class RunBudget:
     max_model_calls: int = 8
     max_tool_calls: int = 16
     max_mutates: int = 1
+    max_program_tool_calls: int = 32
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -250,12 +251,14 @@ class BudgetState:
     model_calls: int = 0
     tool_calls: int = 0
     mutates: int = 0
+    program_tool_calls: int = 0
 
     def remaining(self, budget: RunBudget) -> dict[str, int]:
         return {
             "model_calls": budget.max_model_calls - self.model_calls,
             "tool_calls": budget.max_tool_calls - self.tool_calls,
             "mutates": budget.max_mutates - self.mutates,
+            "program_tool_calls": budget.max_program_tool_calls - self.program_tool_calls,
         }
 
 
@@ -277,6 +280,7 @@ class ToolResult:
     evidence_ids: tuple[str, ...] = ()
     state_version: Optional[int] = None
     mutated: bool = False
+    expanded_calls: int = 0
 
     def to_observation(self) -> dict[str, Any]:
         return {
@@ -289,6 +293,7 @@ class ToolResult:
             "evidence_ids": list(self.evidence_ids),
             "state_version": self.state_version,
             "mutated": self.mutated,
+            "expanded_calls": self.expanded_calls,
         }
 
 
@@ -336,6 +341,7 @@ class Usage:
     output_tokens: int = 0
     compaction_calls: int = 0
     summary_tokens: int = 0
+    program_tool_calls: int = 0
 
 
 @dataclass

@@ -57,6 +57,9 @@ class ToolDispatcher:
                 payload={"error": str(exc)},
             )
         if isinstance(result, ToolResult):
+            expanded = result.expanded_calls or int(
+                (result.payload or {}).get("expanded_calls") or 0
+            )
             return ToolResult(
                 call_id=call.call_id,
                 name=call.name,
@@ -67,13 +70,16 @@ class ToolDispatcher:
                 evidence_ids=result.evidence_ids,
                 state_version=result.state_version,
                 mutated=result.mutated or spec.mutating,
+                expanded_calls=expanded,
             )
+        payload = dict(result or {})
         return ToolResult(
             call_id=call.call_id,
             name=call.name,
             status=ToolStatus.OK,
-            payload=dict(result or {}),
+            payload=payload,
             mutated=spec.mutating,
-            state_version=(result or {}).get("state_version"),
-            evidence_ids=tuple((result or {}).get("evidence_ids") or ()),
+            state_version=payload.get("state_version"),
+            evidence_ids=tuple(payload.get("evidence_ids") or ()),
+            expanded_calls=int(payload.get("expanded_calls") or 0),
         )

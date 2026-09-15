@@ -209,6 +209,7 @@ class AgentHarness:
                         output_tokens=usage.output_tokens,
                         compaction_calls=usage.compaction_calls + 1,
                         summary_tokens=usage.summary_tokens + crecord.summary_tokens,
+                        program_tool_calls=usage.program_tool_calls,
                     )
                     emit("compaction", crecord.to_dict())
                 active_tokens = estimate_tokens(
@@ -223,6 +224,7 @@ class AgentHarness:
                     output_tokens=usage.output_tokens + turn_usage.output_tokens,
                     compaction_calls=usage.compaction_calls,
                     summary_tokens=usage.summary_tokens,
+                    program_tool_calls=usage.program_tool_calls,
                 )
                 emit(
                     "model_turn",
@@ -259,19 +261,21 @@ class AgentHarness:
                         mutate_allowed = not mutate_used
                         result = self.dispatcher.execute(call, mutate_allowed=mutate_allowed)
                         mutated = bool(result.mutated and result.status == ToolStatus.OK)
+                        expanded = int(result.expanded_calls or 0)
                         try:
-                            self.budget.record_tool(mutated=mutated)
+                            self.budget.record_tool(mutated=mutated, expanded_calls=expanded)
                         except BudgetExceeded as exc:
                             # Tool already executed; still record observation then stop.
                             observations.append(result.to_observation())
                             emit("tool_result", result.to_observation())
                             usage = Usage(
                                 model_calls=usage.model_calls,
-                                tool_calls=usage.tool_calls + 1,
+                                tool_calls=usage.tool_calls + 1 + expanded,
                                 input_tokens=usage.input_tokens,
                                 output_tokens=usage.output_tokens,
                                 compaction_calls=usage.compaction_calls,
                                 summary_tokens=usage.summary_tokens,
+                                program_tool_calls=usage.program_tool_calls + expanded,
                             )
                             terminal_reason = str(exc)
                             status = RunStatus.TIMED_OUT
@@ -282,11 +286,12 @@ class AgentHarness:
                             mutate_used = True
                         usage = Usage(
                             model_calls=usage.model_calls,
-                            tool_calls=usage.tool_calls + 1,
+                            tool_calls=usage.tool_calls + 1 + expanded,
                             input_tokens=usage.input_tokens,
                             output_tokens=usage.output_tokens,
                             compaction_calls=usage.compaction_calls,
                             summary_tokens=usage.summary_tokens,
+                            program_tool_calls=usage.program_tool_calls + expanded,
                         )
                         observations.append(result.to_observation())
                         emit("tool_result", result.to_observation())

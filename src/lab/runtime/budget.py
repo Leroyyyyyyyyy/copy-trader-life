@@ -32,10 +32,15 @@ class BudgetTracker:
         self.check_model()
         self.state.model_calls += 1
 
-    def record_tool(self, *, mutated: bool) -> None:
-        self.check_tool()
-        if mutated:
-            self.check_mutate()
-        self.state.tool_calls += 1
+    def record_tool(self, *, mutated: bool, expanded_calls: int = 0) -> None:
+        extra = max(0, int(expanded_calls))
+        if self.state.tool_calls + 1 + extra > self.budget.max_tool_calls:
+            raise BudgetExceeded("tool_calls")
+        if extra and self.state.program_tool_calls + extra > self.budget.max_program_tool_calls:
+            raise BudgetExceeded("program_tool_calls")
+        if mutated and self.state.mutates >= self.budget.max_mutates:
+            raise BudgetExceeded("mutates")
+        self.state.tool_calls += 1 + extra
+        self.state.program_tool_calls += extra
         if mutated:
             self.state.mutates += 1

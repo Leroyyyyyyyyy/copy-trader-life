@@ -1,7 +1,7 @@
 # Tradelife 交接 · 当前执行 L0–L7
 
-> 更新：2026-09-15（H2 stub 2×2 观察消融已落地；H3 沙箱未做）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
-> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 H3（仍属 F3）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
+> 更新：2026-09-15（H3 Docker 沙箱已落地；F3 收口）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
+> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 F4（L4 多 agent）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
 
 ## 1. 用户目标和协作要求
 
@@ -20,7 +20,7 @@
 | L2 ContextBuilder / 压缩 | 已实现；`tests.lab.test_l2_context` |
 | L3 SQLite memory / SkillRegistry | 已实现；`tests.lab.test_l3_memory_skills` |
 | H2 观察消融（stub 2×2） | 已实现；`tests.lab.test_h2_observation` |
-| H3 SandboxExecutor | 尚未实现 |
+| H3 Docker SandboxExecutor | 已实现；`tests.lab.test_h3_sandbox` |
 | 凭证、网络与账户状态 | 本轮未核验 live；lab 不依赖 |
 | Git | 仓库存在；提交与否由本人决定 |
 
@@ -28,11 +28,11 @@
 
 接手先核对文件与已有修改；若别的 agent 已有成果，应保留并从真实完成位置继续，不按旧状态覆盖工作。
 
-## 3. 下一批做 H3（F0–F2 与 H2 已完成）
+## 3. 下一批做 F4（F0–F3 已完成）
 
-H2 已交付：`ObservationPolicy` `state_only|allowed_actions`；允许动作由当前计划状态生成，不读 labels；四组工具权限相同；skill/memory/压缩冻结。Stub A（naive ETH 更新）在列表帮助下避免改 closed plan，但模糊双 ETH 仍会误更新；Stub B（filled-ETH 基数）不依赖列表即可过三题。实测：`python -m unittest tests.lab.test_h2_observation -v` 与 `python -m src.lab.experiments.h2_observation`。**不是真实模型结果。**
+H3 已交付：`DockerSandbox` 在独立容器中执行模型 Python（`--network none`、只读根文件系统、内存/pids 限制）；宿主 `docker.py` 不含 `exec/eval`。`simulate_action` 只分叉快照；`run_program` 无提交接口；`commit_simulated_action` 由宿主核版本后最多应用一次。程序内每次模拟计入 `program_tool_calls`。无 daemon 时不注册 `run_program`。实测：`python -m unittest tests.lab.test_h3_sandbox -v`（55 lab tests 全过）。
 
-H3 目标见手册 3.4：独立 `SandboxExecutor`、程序内多次模拟只提交一次、展开计数。无合格沙箱则 H3 明确未完成，不回退宿主 `exec/eval`。
+F4 目标见手册 1.7.10 / 5：角色边界、共享预算、只读 fan-out、证据汇合；串行/并发同规则评分。
 
 评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。
 
@@ -82,7 +82,7 @@ H3 目标见手册 3.4：独立 `SandboxExecutor`、程序内多次模拟只提�
 1.7 框架、1.8 制作与答辩要求、13.1 目录，以及当前批次验收。
 架构手册是唯一设计来源，不再新建第二份架构文档。
 
-先核对实际文件与已有修改。F0–F2 与 H2 已落地则从 H3 继续；若更早批次缺失，
+先核对实际文件与已有修改。F0–F3 已落地则从 F4 继续；若更早批次缺失，
 从真实缺口补起。保留已有成果，不要覆盖。
 每批给出可运行增量、实际检查结果、关键代码和 trace 讲解、本人理解练习。
 代码验证与本人理解分别记录，不代替本人认定已掌握。
@@ -101,7 +101,7 @@ H3 目标见手册 3.4：独立 `SandboxExecutor`、程序内多次模拟只提�
 
 设计取舍：列表按 filled/not-filled 生成全部计划的合法性，不按 gold 只保留「正确」那张。因此模糊双 ETH 两条更新都合法，列表帮不了会猜的模型。
 
-失败案例：改已关闭计划会被环境拒绝（`plan_not_filled`），与缺字段的 schema 错误分开计数。无合格沙箱的 H3 仍未开始。
+失败案例：改已关闭计划会被环境拒绝（`plan_not_filled`），与缺字段的 schema 错误分开计数。
 
 实验依据：stub A0 完成 1/3、A1 2/3；B0/B1 均为 3/3；A 的环境拒绝从 1 降到 0，输入 token 上升。真实模型未跑。
 
@@ -109,6 +109,22 @@ H3 目标见手册 3.4：独立 `SandboxExecutor`、程序内多次模拟只提�
 
 掌握状态：待练习。
 
-## 8. 每批完成后更新什么
+## 8. H3 本人理解与答辩（代码已验证 / 本人理解待练习）
+
+解决的问题：模型生成的 Python 如何批量模拟候选动作，又保证共享教学账户只被提交一次，且不在宿主进程执行不可信代码。
+
+关键路径：`run_program` → `DockerSandbox.run_program`（`docker run --network none`）→ 容器内 `guest.py` 调用 `simulate_action` 分叉快照 → 返回 `tool_trace`/`proposed_action` → 宿主 `commit_simulated_action` → `SimulationGateway.commit`。
+
+设计取舍：模拟逻辑是纯函数，容器不回调宿主、不改 SQLite。Docker 不可用时禁用 `run_program`，不退回 `exec`。
+
+失败案例：guest 抛错记为可恢复 `program_error`；超时/daemon 缺失是基础设施错误；旧 `expected_state_version` 提交被拒绝且不二次生效。
+
+实验依据：多次模拟只提交一次、异常后改走 `submit_plan_update` 恢复、版本冲突拒绝；展开调用 ≥2。真实模型未跑。
+
+本人练习：待做。建议指出沙箱、展开计数、单次提交三条代码边界。
+
+掌握状态：待练习。
+
+## 9. 每批完成后更新什么
 
 handoff：记录日期、真实批次状态、修改入口、执行命令与结果、问题、下一步及本人理解状态。README：只补真实安装/运行入口与依赖。手册：更新设计决策与验收清单，避免重复存放实现日志。

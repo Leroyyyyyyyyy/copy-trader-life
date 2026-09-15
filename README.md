@@ -19,14 +19,15 @@
 | L2：ContextBuilder、阈值压缩、原始 trace 不变 | 已实现 |
 | L3：SQLite memory、SkillRegistry、按需加载 | 已实现（F2 收口） |
 | H2：两 stub 模型 × 两种观察的 2×2 | 已实现（协议 stub，非真实 LLM） |
-| 当前接手起点 | F3 剩余：H3 沙箱程序工具 |
+| H3：Docker SandboxExecutor、程序模拟后单次提交 | 已实现；无 daemon 时 `run_program` 禁用 |
+| 当前接手起点 | F4：L4 多 agent / 并发 |
 | 当前终点 | F7 / L7：人工审核、恢复和完整批量 eval |
 | L8–L11、SFT/RL、推理集群与模型发布 | 后续资料，不属于本次实施 |
 
-F0–H2 实测：
+F0–H3 实测：
 
 ```bash
-.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation -v
+.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox -v
 ```
 
 历史 testnet 记录见 handoff，不代表当前交易环境已验证。
@@ -65,16 +66,18 @@ python -m unittest tests.test_parser tests.test_risk -v
 
 解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。
 
-Lab F0–H2（离线，不改 `data/state.json`）：
+Lab F0–H3（离线，不改 `data/state.json`）：
 
 ```bash
 source .venv/bin/activate   # macOS 若无 python，用 .venv/bin/python
-python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation -v
+python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox -v
 python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
 python -m src.lab.experiments.h2_observation
 ```
 
-观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。
+H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。
+
+观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。
 
 ## 现有纸交易入口（非新 lab）
 
