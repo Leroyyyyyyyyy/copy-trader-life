@@ -97,6 +97,8 @@ class ContextBuilder:
         memories: list[dict[str, Any]] | None = None,
         skill_catalog: list[dict[str, Any]] | None = None,
         loaded_skills: list[dict[str, Any]] | None = None,
+        allowed_actions: list[dict[str, Any]] | None = None,
+        observation_policy: str | None = None,
     ) -> tuple[dict[str, Any], Optional[CompactionRecord]]:
         groups = group_history(events)
         pinned = {
@@ -109,6 +111,10 @@ class ContextBuilder:
             "skill_catalog": list(skill_catalog or []),
             "loaded_skills": list(loaded_skills or []),
         }
+        if observation_policy is not None:
+            pinned["observation_policy"] = observation_policy
+        if allowed_actions is not None:
+            pinned["allowed_actions"] = list(allowed_actions)
         record: Optional[CompactionRecord] = None
         history_for_model: dict[str, Any]
 

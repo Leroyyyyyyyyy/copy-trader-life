@@ -192,6 +192,8 @@ class AgentHarness:
                         memories=self._memory_prompt_bits(task),
                         skill_catalog=catalog,
                         loaded_skills=loaded,
+                        allowed_actions=env_prompt.get("allowed_actions"),
+                        observation_policy=env_prompt.get("observation_policy"),
                     )
                 except ContextBudgetError as exc:
                     terminal_reason = f"context_budget_error:{exc}"

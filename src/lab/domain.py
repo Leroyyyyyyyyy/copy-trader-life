@@ -15,6 +15,13 @@ class EnvironmentKind(str, Enum):
     PLAN_SIMULATION = "plan_simulation"
 
 
+class ObservationPolicy(str, Enum):
+    """H2 ablation: same tools/state, optional explicit allowed-action list."""
+
+    STATE_ONLY = "state_only"
+    ALLOWED_ACTIONS = "allowed_actions"
+
+
 class DecisionKind(str, Enum):
     UPDATE = "update"
     IGNORE = "ignore"

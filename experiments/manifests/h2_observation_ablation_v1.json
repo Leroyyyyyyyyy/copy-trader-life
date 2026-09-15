@@ -1,0 +1,40 @@
+{
+  "experiment_id": "h2-observation-ablation-v1",
+  "hypothesis": "Explicit allowed-actions reduce illegal submits for a naive policy, without leaking the gold plan on ambiguous tasks.",
+  "environment": "plan_simulation",
+  "model_kind": "stub",
+  "tasks": [
+    "tl_f0_move_sl_plan_a",
+    "tl_f0_closed_plan",
+    "tl_f0_ambiguous_eth"
+  ],
+  "models": [
+    {
+      "id": "A",
+      "adapter": "naive_eth_update",
+      "version": "stub.naive_eth.v1"
+    },
+    {
+      "id": "B",
+      "adapter": "eth_cardinality",
+      "version": "stub.eth_cardinality.v1"
+    }
+  ],
+  "cells": {
+    "A0": {"model": "A", "observation_policy": "state_only"},
+    "A1": {"model": "A", "observation_policy": "allowed_actions"},
+    "B0": {"model": "B", "observation_policy": "state_only"},
+    "B1": {"model": "B", "observation_policy": "allowed_actions"}
+  },
+  "frozen": {
+    "skill_mode": "none",
+    "memory": null,
+    "context_policy": "full",
+    "budget": {
+      "max_model_calls": 8,
+      "max_tool_calls": 16,
+      "max_mutates": 1
+    }
+  },
+  "note": "Stub policies accept the tool protocol. Real-model H2 numbers are a separate report."
+}

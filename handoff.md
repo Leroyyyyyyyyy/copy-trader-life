@@ -1,7 +1,7 @@
 # Tradelife 交接 · 当前执行 L0–L7
 
-> 更新：2026-09-13（F2 收口：L2 压缩 + L3 SQLite memory / SkillRegistry 按需加载）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
-> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 F3（H2/H3）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
+> 更新：2026-09-15（H2 stub 2×2 观察消融已落地；H3 沙箱未做）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
+> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 H3（仍属 F3）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
 
 ## 1. 用户目标和协作要求
 
@@ -19,7 +19,8 @@
 | F1 harness / runtime / stub / 两环境 / SimulationGateway | 已实现；`tests.lab.test_f1_harness` 覆盖成功/恢复/预算/幂等 |
 | L2 ContextBuilder / 压缩 | 已实现；`tests.lab.test_l2_context` |
 | L3 SQLite memory / SkillRegistry | 已实现；`tests.lab.test_l3_memory_skills` |
-| F3 H2/H3 观察消融与沙箱 | 尚未实现 |
+| H2 观察消融（stub 2×2） | 已实现；`tests.lab.test_h2_observation` |
+| H3 SandboxExecutor | 尚未实现 |
 | 凭证、网络与账户状态 | 本轮未核验 live；lab 不依赖 |
 | Git | 仓库存在；提交与否由本人决定 |
 
@@ -27,11 +28,11 @@
 
 接手先核对文件与已有修改；若别的 agent 已有成果，应保留并从真实完成位置继续，不按旧状态覆盖工作。
 
-## 3. 下一批做 F3（F0–F2 已完成）
+## 3. 下一批做 H3（F0–F2 与 H2 已完成）
 
-L3 已交付：`MemoryStore`（过期/更正/冲突/overlay 隔离、拒绝 label）；`SkillRegistry` 读 `experiments/skill_library/`；`skill_mode=none|catalog|preload`；`invoke_skill` 不扩大工具集；新 run 不继承已加载正文。实测：`python -m unittest tests.lab.test_l3_memory_skills -v`。
+H2 已交付：`ObservationPolicy` `state_only|allowed_actions`；允许动作由当前计划状态生成，不读 labels；四组工具权限相同；skill/memory/压缩冻结。Stub A（naive ETH 更新）在列表帮助下避免改 closed plan，但模糊双 ETH 仍会误更新；Stub B（filled-ETH 基数）不依赖列表即可过三题。实测：`python -m unittest tests.lab.test_h2_observation -v` 与 `python -m src.lab.experiments.h2_observation`。**不是真实模型结果。**
 
-F3 目标见手册 1.7.10：H2 两模型×观察矩阵、H3 SandboxExecutor。无合格沙箱则 H3 明确未完成。
+H3 目标见手册 3.4：独立 `SandboxExecutor`、程序内多次模拟只提交一次、展开计数。无合格沙箱则 H3 明确未完成，不回退宿主 `exec/eval`。
 
 评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。
 
@@ -81,7 +82,7 @@ F3 目标见手册 1.7.10：H2 两模型×观察矩阵、H3 SandboxExecutor。�
 1.7 框架、1.8 制作与答辩要求、13.1 目录，以及当前批次验收。
 架构手册是唯一设计来源，不再新建第二份架构文档。
 
-先核对实际文件与已有修改。F0–F2 已落地则从 F3 继续；若更早批次缺失，
+先核对实际文件与已有修改。F0–F2 与 H2 已落地则从 H3 继续；若更早批次缺失，
 从真实缺口补起。保留已有成果，不要覆盖。
 每批给出可运行增量、实际检查结果、关键代码和 trace 讲解、本人理解练习。
 代码验证与本人理解分别记录，不代替本人认定已掌握。
@@ -92,6 +93,22 @@ F3 目标见手册 1.7.10：H2 两模型×观察矩阵、H3 SandboxExecutor。�
 真实 CLI 可运行后再更新 README。不要把文档草案当作现有代码。
 ```
 
-## 7. 每批完成后更新什么
+## 7. H2 本人理解与答辩（代码已验证 / 本人理解待练习）
+
+解决的问题：同样的计划模拟任务、工具和账户状态，只改变是否把「当前允许动作」写进观察，比较它对两种固定决策策略的影响。
+
+关键路径：`run_h2_matrix` → `PlanSimulationEnvironment.build_prompt` → `allowed_actions_from_plans(gateway.plans())` → `ContextBuilder` → stub `generate` → `submit_plan_update` / `submit_decision` → `verify_plan_decision`。
+
+设计取舍：列表按 filled/not-filled 生成全部计划的合法性，不按 gold 只保留「正确」那张。因此模糊双 ETH 两条更新都合法，列表帮不了会猜的模型。
+
+失败案例：改已关闭计划会被环境拒绝（`plan_not_filled`），与缺字段的 schema 错误分开计数。无合格沙箱的 H3 仍未开始。
+
+实验依据：stub A0 完成 1/3、A1 2/3；B0/B1 均为 3/3；A 的环境拒绝从 1 降到 0，输入 token 上升。真实模型未跑。
+
+本人练习：待做。建议先预测 A0 closed / A1 ambiguous 的结果，再对照 `python -m src.lab.experiments.h2_observation`。
+
+掌握状态：待练习。
+
+## 8. 每批完成后更新什么
 
 handoff：记录日期、真实批次状态、修改入口、执行命令与结果、问题、下一步及本人理解状态。README：只补真实安装/运行入口与依赖。手册：更新设计决策与验收清单，避免重复存放实现日志。
