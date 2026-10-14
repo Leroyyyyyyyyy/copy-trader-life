@@ -1,0 +1,48 @@
+{
+  "task_id": "tl_real_8081_recap",
+  "family_id": "real_replay",
+  "material_version": "replay.2026-10-14",
+  "verifier_version": "f0.plan_sl.v1",
+  "source": "real POPIGOGO #8081 (retrospective on a past trade)",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "ignore",
+      "allow_unchanged": true,
+      "notes": "Not an entry or exit instruction"
+    },
+    {
+      "kind": "review",
+      "allow_unchanged": true,
+      "notes": "Escalating is acceptable"
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 80000,
+      "stop_loss": 76000,
+      "take_profit": 90000,
+      "state_version": 2,
+      "note": "earlier BTC long"
+    },
+    {
+      "plan_id": "plan_eth",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 2500,
+      "stop_loss": 2300,
+      "take_profit": 2900,
+      "state_version": 2,
+      "note": "earlier ETH long"
+    }
+  ]
+}

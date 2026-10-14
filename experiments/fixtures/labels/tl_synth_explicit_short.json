@@ -1,0 +1,45 @@
+{
+  "task_id": "tl_synth_explicit_short",
+  "family_id": "real_replay",
+  "material_version": "replay.2026-10-14",
+  "verifier_version": "f0.plan_sl.v1",
+  "source": "SYNTHETIC positive control, not a real post",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "open",
+      "symbol": "BTC",
+      "side": "sell",
+      "stop_loss": 84000,
+      "notes": "Explicit market short with stop. SYNTHETIC positive control."
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 80000,
+      "stop_loss": 76000,
+      "take_profit": 90000,
+      "state_version": 2,
+      "note": "earlier BTC long"
+    },
+    {
+      "plan_id": "plan_eth",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 2500,
+      "stop_loss": 2300,
+      "take_profit": 2900,
+      "state_version": 2,
+      "note": "earlier ETH long"
+    }
+  ]
+}

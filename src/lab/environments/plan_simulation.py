@@ -37,6 +37,7 @@ class PlanSimulationEnvironment:
         sandbox: Any = None,
         credential: SimulatedCredential | None = None,
         review_policy: str = "disabled",
+        allow_open: bool = False,
     ):
         if review_policy not in REVIEW_POLICIES:
             raise ValueError(f"unknown review_policy {review_policy}")
@@ -51,6 +52,8 @@ class PlanSimulationEnvironment:
         # L7: disabled = commit as before; on_ambiguity = a review decision is held
         # for a human; always = every commit is held for a human.
         self.review_policy = review_policy
+        # Opening new positions is opt-in so earlier experiments keep their tool set.
+        self.allow_open = allow_open
         self.pending_proposal: dict[str, Any] | None = None
         self._decision: SubmittedDecision | None = None
         max_version = max((p.state_version for p in bundle.plans), default=1)
@@ -109,6 +112,19 @@ class PlanSimulationEnvironment:
                 required_args=("kind", "evidence_refs", "expected_state_version"),
             )
         )
+        if self.allow_open:
+            reg.register(
+                ToolSpec(
+                    name="submit_new_order",
+                    description=(
+                        "Open a new simulated position (market). Only for an explicit, current "
+                        "instruction to enter. Requires symbol, side (buy|sell), stop_loss; "
+                        "optional take_profit, usd."
+                    ),
+                    mutating=True,
+                    required_args=("symbol", "side", "stop_loss", "evidence_refs"),
+                )
+            )
         if self.credential is not None:
             reg.register(
                 ToolSpec(
@@ -260,6 +276,48 @@ class PlanSimulationEnvironment:
                 arguments,
                 decision_id=str(arguments.get("idempotency_key") or "simulated"),
             )
+        if name == "submit_new_order" and self.allow_open:
+            changes = {
+                "symbol": str(arguments.get("symbol") or "").upper(),
+                "side": str(arguments.get("side") or "").lower(),
+                "stop_loss": None if arguments.get("stop_loss") is None else float(arguments["stop_loss"]),
+                "take_profit": None if arguments.get("take_profit") is None else float(arguments["take_profit"]),
+                "usd": None if arguments.get("usd") is None else float(arguments["usd"]),
+            }
+            decision = SubmittedDecision(
+                kind=DecisionKind.OPEN,
+                proposed_changes=changes,
+                evidence_refs=tuple(arguments.get("evidence_refs") or ()),
+                expected_state_version=arguments.get(
+                    "expected_state_version", self.gateway.state_version
+                ),
+            )
+            held = self._maybe_hold(name, decision, arguments)
+            if held is not None:
+                return held
+            receipt = self.gateway.commit(
+                run_id=self.run_id,
+                decision=decision,
+                expected_state_version=decision.expected_state_version,
+            )
+            if not receipt.applied and not receipt.reused:
+                return ToolResult(
+                    call_id="",
+                    name=name,
+                    status=ToolStatus.ERROR,
+                    error_code=receipt.error_code or "commit_rejected",
+                    retryable=_retryable_commit_error(receipt.error_code)
+                    or "missing_stop_loss" in (receipt.error_code or ""),
+                    payload=receipt.to_dict(),
+                    mutated=False,
+                )
+            self._decision = decision
+            return {
+                "receipt": receipt.to_dict(),
+                "state_version": self.gateway.state_version,
+                "evidence_ids": list(decision.evidence_refs),
+                "snapshot": self.gateway.snapshot(),
+            }
         if name == "submit_plan_update":
             decision = SubmittedDecision(
                 kind=DecisionKind.UPDATE,

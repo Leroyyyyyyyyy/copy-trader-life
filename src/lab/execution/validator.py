@@ -34,6 +34,15 @@ class DecisionValidator:
                     errors.append(f"plan_not_filled:{plan.status.value}")
             if decision.proposed_changes and "stop_loss" not in decision.proposed_changes:
                 errors.append("missing_stop_loss")
+        if decision.kind == DecisionKind.OPEN:
+            ch = decision.proposed_changes
+            if not ch.get("symbol"):
+                errors.append("missing_symbol")
+            if ch.get("side") not in {"buy", "sell"}:
+                errors.append("invalid_side")
+            if ch.get("stop_loss") is None:
+                # Manual 7.1: every execution plan carries a stop.
+                errors.append("missing_stop_loss")
         if not decision.evidence_refs:
             errors.append("missing_evidence")
         return errors

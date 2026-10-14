@@ -119,6 +119,8 @@ def load_eval_spec(task_id: str, label_dir: Path | None = None) -> EvalSpec:
                 require_state_change=bool(item.get("require_state_change", False)),
                 allow_unchanged=bool(item.get("allow_unchanged", False)),
                 notes=str(item.get("notes", "")),
+                symbol=item.get("symbol"),
+                side=item.get("side"),
             )
         )
     return EvalSpec(

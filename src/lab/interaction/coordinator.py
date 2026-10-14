@@ -43,6 +43,7 @@ def run_task(
     credential: bool = True,
     model_timeout_sec: float | None = None,
     trace_id: Optional[str] = None,
+    allow_open: bool = False,
 ) -> TaskRun:
     account_id = account_id or f"acct_{run_id}"
     task, obs = load_agent_view(task_id)
@@ -52,6 +53,7 @@ def run_task(
         run_id=run_id,
         credential=SimulatedCredential() if credential else None,
         review_policy=review_policy,
+        allow_open=allow_open,
     )
     harness = AgentHarness(
         store=store,

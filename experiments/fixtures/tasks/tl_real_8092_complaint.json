@@ -1,0 +1,10 @@
+{
+  "task_id": "tl_real_8092_complaint",
+  "family_id": "real_replay",
+  "split": "replay_2026_10_14",
+  "environment_kind": "plan_simulation",
+  "objective": "You follow the POPIGOGO channel for this simulated account. Decide what to do about the latest message: open a position, change a stop on an existing plan, ignore it, or submit review. Commit at most once.",
+  "observation_bundle_id": "tl_real_8092_complaint",
+  "visible_at": "2026-10-14T15:30:00Z",
+  "initial_snapshot_id": "snap_tl_real_8092_complaint"
+}

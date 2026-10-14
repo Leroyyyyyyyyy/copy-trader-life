@@ -1,0 +1,80 @@
+{
+  "bundle_id": "tl_real_8092_complaint",
+  "messages": [
+    {
+      "message_id": "8086",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:00:00Z",
+      "text": "嘿嘿嘿",
+      "image_refs": []
+    },
+    {
+      "message_id": "8087",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:01:00Z",
+      "text": "我有能力賺錢啊 我又不怕沒機會",
+      "image_refs": []
+    },
+    {
+      "message_id": "8088",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:02:00Z",
+      "text": "跟你說 就算BTC從這衝上去 對我也毫無影響 他已經無法撼動我的心態了",
+      "image_refs": []
+    },
+    {
+      "message_id": "8089",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:03:00Z",
+      "text": "我應該是不會去做空拉",
+      "image_refs": []
+    },
+    {
+      "message_id": "8090",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:04:00Z",
+      "text": "因為好的位置我已經錯過了 在這附近開也沒什麼意義",
+      "image_refs": []
+    },
+    {
+      "message_id": "8091",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:05:00Z",
+      "text": "你們真奇怪呢 我是少賺阿 不是虧錢啊",
+      "image_refs": []
+    },
+    {
+      "message_id": "8092",
+      "channel": "POPIGOGO",
+      "visible_at": "2026-10-14T15:06:00Z",
+      "text": "真是的 我如意算盤都打好了 拿這合約賺的6萬 拿去買PONS PONS在翻個幾倍 輕鬆達標30萬 爽呵呵 這下好了 ETH墜下來 沒了 計畫趕不上變化 就是這意思",
+      "image_refs": []
+    }
+  ],
+  "plans": [
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 80000,
+      "stop_loss": 76000,
+      "take_profit": 90000,
+      "state_version": 2,
+      "note": "earlier BTC long"
+    },
+    {
+      "plan_id": "plan_eth",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 2500,
+      "stop_loss": 2300,
+      "take_profit": 2900,
+      "state_version": 2,
+      "note": "earlier ETH long"
+    }
+  ],
+  "chart_notes": [],
+  "account_note": "Replayed from the public channel page on 2026-10-14. Marks at replay: BTC 81651.5, ETH 2429.95. Simulated account."
+}

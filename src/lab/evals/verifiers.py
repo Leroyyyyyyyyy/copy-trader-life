@@ -43,6 +43,8 @@ def _outcome_label(outcome: AcceptableOutcome) -> str:
     parts = [outcome.kind.value]
     if outcome.referenced_plan_id:
         parts.append(outcome.referenced_plan_id)
+    if outcome.symbol:
+        parts.append(f"{outcome.symbol}:{outcome.side}")
     if outcome.stop_loss is not None:
         parts.append(f"sl={outcome.stop_loss}")
     return "|".join(parts)
@@ -104,6 +106,12 @@ def verify_plan_decision(
         if plan_id not in target_ids and not _plans_equal(before, after):
             semantic_errors.append(f"non_target_plan_changed:{plan_id}")
 
+    # New positions are only legitimate when an OPEN outcome is acceptable.
+    new_plans = [p for pid, p in final.items() if pid not in baseline]
+    if new_plans and not any(o.kind == DecisionKind.OPEN for o in eval_spec.acceptable_outcomes):
+        for p in new_plans:
+            semantic_errors.append(f"unexpected_new_plan:{p.symbol}:{p.side}")
+
     matched: Optional[str] = None
     outcome_errors: list[str] = []
 
@@ -137,6 +145,19 @@ def verify_plan_decision(
                         local.append(
                             f"proposed_stop_loss:{proposed_sl}!={outcome.stop_loss}"
                         )
+        if outcome.kind == DecisionKind.OPEN:
+            ch = decision.proposed_changes
+            opened = [
+                p for p in new_plans
+                if (outcome.symbol is None or p.symbol == outcome.symbol)
+                and (outcome.side is None or p.side == outcome.side)
+            ]
+            if not opened:
+                local.append("expected_new_position_missing")
+            elif outcome.stop_loss is not None and not _sl_matches(opened[0].stop_loss, outcome.stop_loss):
+                local.append(f"stop_loss:{opened[0].stop_loss}!={outcome.stop_loss}")
+            if outcome.side is not None and ch.get("side") not in {None, outcome.side}:
+                local.append(f"side:{ch.get('side')}!={outcome.side}")
         if outcome.kind in {DecisionKind.REVIEW, DecisionKind.IGNORE}:
             if outcome.allow_unchanged:
                 for plan_id, before in baseline.items():

@@ -1,0 +1,459 @@
+{
+  "experiment": "real_replay_rule_vs_agent.v1",
+  "model": "env:DEEPSEEK_LAB_MODEL|deepseek-flash",
+  "temperature": 0.7,
+  "repeats": 3,
+  "review_policy": "disabled (agent decision is final, like the rule engine)",
+  "rows": [
+    {
+      "task_id": "tl_real_8081_recap",
+      "source": "real POPIGOGO #8081 (retrospective on a past trade)",
+      "message": "大概檢討一下 我認為這是我今年做最差的一筆交易 6萬獲利只賺了1萬3 2700的時候我其實就想獲利了解了 被不明力量蠱惑到了 而破2700的時候 就該止盈了我還在凹 沒凹的話 大概能入4~5萬U吧 記取這次教訓 下次要單筆賺個10萬U 希望今年挑戰帳戶能破20萬U",
+      "rule_parser": {
+        "side": "hold",
+        "intent": "update",
+        "symbol": "BTC",
+        "confidence": 0.86,
+        "skip": null,
+        "stop_loss": null,
+        "take_profit": 2700.0,
+        "would_act": true,
+        "pass": false
+      },
+      "agent_pass": 3,
+      "agent_runs": [
+        {
+          "repeat": 0,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "The POPIGOGO message is only a retrospective recap of a past trade with no actionable instruction, so I recorded an ignore decision and made no changes to plan_btc or plan_eth.",
+          "usage": {
+            "in": 3544,
+            "out": 451
+          },
+          "latency_ms": 4512.1
+        },
+        {
+          "repeat": 1,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "Message 8081 is only a retrospective self-critique of a past trade with no current instruction to enter or adjust stops, so I committed an ignore decision and left the filled BTC and ETH plans unchanged.",
+          "usage": {
+            "in": 3592,
+            "out": 714
+          },
+          "latency_ms": 5895.7
+        },
+        {
+          "repeat": 2,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "Message 8081 is only a retrospective self-review of a past closed trade with no current entry or stop instruction, so I committed an ignore decision and left both filled plans (BTC, ETH) unchanged.",
+          "usage": {
+            "in": 3545,
+            "out": 346
+          },
+          "latency_ms": 3603.4
+        }
+      ]
+    },
+    {
+      "task_id": "tl_real_8089_negation",
+      "source": "real POPIGOGO #8089 (negated short) with #8083-#8088 context",
+      "message": "我應該是不會去做空拉",
+      "rule_parser": {
+        "side": "sell",
+        "intent": "market",
+        "symbol": "BTC",
+        "confidence": 0.86,
+        "skip": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "would_act": true,
+        "pass": false
+      },
+      "agent_pass": 3,
+      "agent_runs": [
+        {
+          "repeat": 0,
+          "status": "timed_out",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ],
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": null,
+          "usage": {
+            "in": 4085,
+            "out": 730
+          },
+          "latency_ms": 5874.6
+        },
+        {
+          "repeat": 1,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "The latest message (8089) is only a vague statement that the author probably won't short; it contains no explicit entry, exit, or stop instruction, so no plan change or order is warranted and an ignore decision was already committed.",
+          "usage": {
+            "in": 4036,
+            "out": 805
+          },
+          "latency_ms": 7037.9
+        },
+        {
+          "repeat": 2,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "Latest POPIGOGO message contains no actionable entry or stop-change instruction, so the prior ignore decision stands.",
+          "usage": {
+            "in": 4036,
+            "out": 1269
+          },
+          "latency_ms": 9199.0
+        }
+      ]
+    },
+    {
+      "task_id": "tl_real_8092_complaint",
+      "source": "real POPIGOGO #8092 (complaint) with #8086-#8091 context",
+      "message": "真是的 我如意算盤都打好了 拿這合約賺的6萬 拿去買PONS PONS在翻個幾倍 輕鬆達標30萬 爽呵呵 這下好了 ETH墜下來 沒了 計畫趕不上變化 就是這意思",
+      "rule_parser": {
+        "side": "buy",
+        "intent": "market",
+        "symbol": "ETH",
+        "confidence": 0.9,
+        "skip": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "would_act": true,
+        "pass": false
+      },
+      "agent_pass": 3,
+      "agent_runs": [
+        {
+          "repeat": 0,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ],
+            [
+              "submit_decision",
+              "error",
+              "idempotency_payload_mismatch"
+            ]
+          ],
+          "summary": "The channel's latest messages are emotional venting with no explicit entry, exit, or stop instruction, so the ignore decision already committed (state_version 2) stands and no further plan change is warranted.",
+          "usage": {
+            "in": 7227,
+            "out": 970
+          },
+          "latency_ms": 8833.8
+        },
+        {
+          "repeat": 1,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "The POPIGOGO messages are the trader venting about a missed ETH entry and lost profit, with no explicit instruction to enter or to adjust any stop, so I committed an ignore decision and left the filled BTC (stop 76000) and ETH (stop 2300) plans unchanged.",
+          "usage": {
+            "in": 4321,
+            "out": 660
+          },
+          "latency_ms": 5262.4
+        },
+        {
+          "repeat": 2,
+          "status": "succeeded",
+          "decision": {
+            "kind": "ignore",
+            "plan": null,
+            "changes": {}
+          },
+          "new_positions": [],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_decision",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "Latest POPIGOGO messages are personal commentary about a missed ETH move and the ETH plan's unrealized gains fading; no explicit instruction to enter, exit, or adjust stops, so I committed an ignore decision and made no plan changes.",
+          "usage": {
+            "in": 4212,
+            "out": 448
+          },
+          "latency_ms": 4604.4
+        }
+      ]
+    },
+    {
+      "task_id": "tl_synth_explicit_short",
+      "source": "SYNTHETIC positive control, not a real post",
+      "message": "$BTC 這裡直接市價開空 止損 84000 目標 78000 倉位輕一點",
+      "rule_parser": {
+        "side": "sell",
+        "intent": "market",
+        "symbol": "BTC",
+        "confidence": 0.86,
+        "skip": null,
+        "stop_loss": 84000.0,
+        "take_profit": 84000.0,
+        "would_act": true,
+        "pass": true
+      },
+      "agent_pass": 3,
+      "agent_runs": [
+        {
+          "repeat": 0,
+          "status": "succeeded",
+          "decision": {
+            "kind": "open",
+            "plan": null,
+            "changes": {
+              "symbol": "BTC",
+              "side": "sell",
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "usd": null
+            }
+          },
+          "new_positions": [
+            {
+              "plan_id": "plan_open_3",
+              "symbol": "BTC",
+              "status": "filled",
+              "side": "sell",
+              "cost_basis": null,
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "state_version": 3,
+              "note": "opened by replay_tl_synth_explicit_short_0"
+            }
+          ],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_new_order",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "The explicit short-BTC instruction in message S1 was already executed by the prior committed order plan_open_3, so no further action is needed.",
+          "usage": {
+            "in": 3582,
+            "out": 3592
+          },
+          "latency_ms": 21704.1
+        },
+        {
+          "repeat": 1,
+          "status": "succeeded",
+          "decision": {
+            "kind": "open",
+            "plan": null,
+            "changes": {
+              "symbol": "BTC",
+              "side": "sell",
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "usd": 1000.0
+            }
+          },
+          "new_positions": [
+            {
+              "plan_id": "plan_open_3",
+              "symbol": "BTC",
+              "status": "filled",
+              "side": "sell",
+              "cost_basis": null,
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "state_version": 3,
+              "note": "opened by replay_tl_synth_explicit_short_1"
+            }
+          ],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_new_order",
+              "ok",
+              null
+            ],
+            [
+              "get_account_snapshot",
+              "ok",
+              null
+            ],
+            [
+              "submit_decision",
+              "error",
+              "idempotency_payload_mismatch"
+            ]
+          ],
+          "summary": "The explicit short instruction in message S1 was already executed as plan_open_3 (BTC sell, stop 84000, target 78000), so no further plan change is needed and the duplicate ignore-decision attempt was correctly rejected by idempotency.",
+          "usage": {
+            "in": 9415,
+            "out": 6635
+          },
+          "latency_ms": 40529.7
+        },
+        {
+          "repeat": 2,
+          "status": "succeeded",
+          "decision": {
+            "kind": "open",
+            "plan": null,
+            "changes": {
+              "symbol": "BTC",
+              "side": "sell",
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "usd": null
+            }
+          },
+          "new_positions": [
+            {
+              "plan_id": "plan_open_3",
+              "symbol": "BTC",
+              "status": "filled",
+              "side": "sell",
+              "cost_basis": null,
+              "stop_loss": 84000.0,
+              "take_profit": 78000.0,
+              "state_version": 3,
+              "note": "opened by replay_tl_synth_explicit_short_2"
+            }
+          ],
+          "hard_pass": true,
+          "errors": [],
+          "tools": [
+            [
+              "submit_new_order",
+              "ok",
+              null
+            ]
+          ],
+          "summary": "The POPIGOGO message's explicit market-short instruction on BTC was already executed in this run as plan_open_3 (sell BTC, stop 84000, take profit 78000), and no further stop change or new order is warranted, so no additional action is taken.",
+          "usage": {
+            "in": 3575,
+            "out": 1954
+          },
+          "latency_ms": 13469.0
+        }
+      ]
+    }
+  ]
+}

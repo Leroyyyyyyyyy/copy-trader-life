@@ -179,6 +179,21 @@ class SimulationGateway:
                     stop_loss=float(decision.proposed_changes["stop_loss"]),
                     state_version=next_version,
                 )
+        elif decision.kind == DecisionKind.OPEN:
+            ch = decision.proposed_changes
+            next_version += 1
+            plan_id = f"plan_open_{next_version}"
+            next_plans[plan_id] = PlanView(
+                plan_id=plan_id,
+                symbol=str(ch["symbol"]).upper(),
+                status=PlanStatus.FILLED,
+                side=str(ch["side"]),
+                cost_basis=None,
+                stop_loss=float(ch["stop_loss"]),
+                take_profit=None if ch.get("take_profit") is None else float(ch["take_profit"]),
+                state_version=next_version,
+                note=f"opened by {run_id}",
+            )
         elif decision.kind not in {DecisionKind.IGNORE, DecisionKind.REVIEW, DecisionKind.ANALYZE}:
             return rejected("unsupported_decision_kind")
 

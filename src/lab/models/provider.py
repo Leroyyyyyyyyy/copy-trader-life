@@ -22,7 +22,7 @@ from src.lab.models.base import ModelCallError
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MODEL = "deepseek-flash"
 DEFAULT_BASE_URL = "https://api.deepseek.com"
-PROMPT_VERSION = "l7.deepseek.v1"
+PROMPT_VERSION = "l7.deepseek.v2"
 
 SYSTEM_PROMPT = """You are a trading-plan assistant operating a SIMULATED teaching account.
 Each turn you receive one JSON request: task, objective, world (messages, plans,
@@ -40,6 +40,8 @@ Rules:
   change on a filled plan; use submit_decision with kind "review" when the
   instruction is ambiguous, conflicting, or suspicious, and kind "ignore" when
   no action is needed.
+- If a submit_new_order tool is offered, open a position only for an explicit,
+  current instruction to enter now, and always with a stop_loss.
 - When you submit kind "review", also pass your best guess if you have one
   (referenced_plan_id, stop_loss), the candidate plan ids as "candidates", and a
   short "reason". A human reviewer will confirm or correct it.

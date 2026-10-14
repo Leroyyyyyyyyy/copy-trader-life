@@ -38,6 +38,8 @@ F7 已交付：`PlanSimulationEnvironment(review_policy=...)` 在需要复核时
 
 端到端验证（2026-10-14）：`src/lab/experiments/e2e_cli.py` 用真实 CLI 子进程、全新数据库跑 5 个场景（歧义+外部改动、缺信息由人补、自信自动提交、凭证请求全审、注入仅歧义审），每个场景检查：事件去重拒绝重复、trace_id 由事件派生并贯穿 run 与审核卡、待审时未提交、旧批复 stale 且未执行、旧 revision 被拒、回复幂等、最多一次提交、导出 trace 无密钥、生命周期事件齐全。规则桩与 DeepSeek 各跑一次，不变量全部通过，5/5 任务判分通过（报告 `experiments/reports/e2e_deepseek_2026-10-14.json`）。原有业务单测 44 项、lab 102 项同时通过。CLI 新增 `run --event-id`、`score`、`trace`；账户记录 `external_changes`，判分时把外部改动计入基线，不误判为 run 改了非目标计划。
 
+真实消息对照（2026-10-14）：先用原有链路 `python -m src.main --paper --replay 12` 回放 3 个频道 31 条公开消息，链路通（Telegram 公开页 → parser → 风控 → 纸面执行，HL testnet 只读行情），但触发的 3 笔动作全是误判：#8081 复盘被解析成 BTC 止盈 2700；#8089“我應該是不會去做空拉”被解析成市价空 BTC；#8092 抱怨 ETH 下跌被解析成市价多 ETH；两笔开仓都没有止损（原风控放行）。回放只改了 `data/state.json` 的 `seen`（27→58），回放前备份在会话 scratchpad。随后把这 3 条消息（带真实上下文）和 1 条**合成**的明确开空信号做成 lab 任务（`tl_real_*`、`tl_synth_explicit_short`），给环境加了可选的 `submit_new_order`（必须带止损；判分器对多出来的仓位报 `unexpected_new_plan`）。`python -m src.lab.experiments.real_replay`：规则解析器 1/4 通过（3 条真实消息全错；合成信号把止盈也解析成 84000）；DeepSeek 每条 3 次共 12/12 通过（3 条真实消息都 ignore，合成信号开空、止损 84000、止盈 78000）。报告 `experiments/reports/real_replay_deepseek_2026-10-14.json`。注意：开仓提示规则是通用的（“只在明确的、当下的入场指令时开仓，必须带止损”），没有写入这 3 条消息的具体类型；样本仍只有 3 条真实负例 + 1 条合成正例；lab 没有限制下单金额，有一次 agent 在“倉位輕一點”下选了 usd=1000，原风控上限是 50。
+
 未做（有意留下）：DeepEval 适配器与 LLM judge（手册 A2 中的可选部分；确定性 verifier 仍是主判据）；真人审核实验（目前只有模拟审核员）；网页审核界面。
 
 评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。

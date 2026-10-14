@@ -24,6 +24,7 @@ class ObservationPolicy(str, Enum):
 
 class DecisionKind(str, Enum):
     UPDATE = "update"
+    OPEN = "open"
     IGNORE = "ignore"
     REVIEW = "review"
     ANALYZE = "analyze"
@@ -139,6 +140,8 @@ class AcceptableOutcome:
     require_state_change: bool = False
     allow_unchanged: bool = False
     notes: str = ""
+    symbol: Optional[str] = None  # OPEN outcomes
+    side: Optional[str] = None
 
 
 @dataclass(frozen=True)

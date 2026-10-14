@@ -30,7 +30,7 @@
 F0–F7 实测：
 
 ```bash
-.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review tests.lab.test_e2e_cli -v
+.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review tests.lab.test_e2e_cli tests.lab.test_real_replay -v
 ```
 
 历史 testnet 记录见 handoff，不代表当前交易环境已验证。
@@ -73,7 +73,7 @@ Lab F0–F7（离线，不改 `data/state.json`）：
 
 ```bash
 source .venv/bin/activate   # macOS 若无 python，用 .venv/bin/python
-python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review tests.lab.test_e2e_cli -v
+python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review tests.lab.test_e2e_cli tests.lab.test_real_replay -v
 python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
 python -m src.lab.experiments.h2_observation
 python -m src.lab.experiments.f6_faults --part all --model stub
@@ -101,6 +101,7 @@ python -m src.lab.cli trace <run_id>    # 导出脱敏 trace（JSONL）并给出
 ```bash
 python -m src.lab.experiments.e2e_cli --model stub
 python -m src.lab.experiments.e2e_cli --model deepseek --out experiments/reports/e2e_deepseek.json
+python -m src.lab.experiments.real_replay --repeats 3   # 规则解析器 vs DeepSeek，同一批回放消息
 ```
 
 `run` 默认用规则桩 agent；加 `--model deepseek` 用真实模型。审核策略：`disabled`（agent 决定即提交）、`on_ambiguity`（agent 提交 review 时交人审）、`always`（所有提交都交人审）。
