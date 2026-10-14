@@ -73,12 +73,15 @@ class ToolDispatcher:
                 expanded_calls=expanded,
             )
         payload = dict(result or {})
+        # A reused receipt means the same commit was replayed and nothing changed;
+        # it must not consume the run's mutation budget.
+        reused = bool((payload.get("receipt") or {}).get("reused"))
         return ToolResult(
             call_id=call.call_id,
             name=call.name,
             status=ToolStatus.OK,
             payload=payload,
-            mutated=spec.mutating,
+            mutated=spec.mutating and not reused,
             state_version=payload.get("state_version"),
             evidence_ids=tuple(payload.get("evidence_ids") or ()),
             expanded_calls=int(payload.get("expanded_calls") or 0),

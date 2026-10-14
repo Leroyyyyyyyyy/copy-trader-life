@@ -64,6 +64,30 @@ class RealReplayTests(unittest.TestCase):
         self.assertIn("unexpected_new_plan:BTC:sell", score.semantic_errors)
         self.assertFalse(score.hard_pass)
 
+    def test_account_continues_across_runs(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        store = RunStore(Path(tmp.name) / "r.sqlite")
+        self.addCleanup(store.close)
+        task, obs = load_agent_view("tl_synth_explicit_short")
+        gw = SimulationGateway(store, account_id="acct_m")
+        env1 = PlanSimulationEnvironment(obs, gw, run_id="m1", allow_open=True)
+        AgentHarness(store=store, model=StubModelAdapter(_order()), environment=env1).run(task, run_id="m1")
+        gw2 = SimulationGateway(store, account_id="acct_m")
+        env2 = PlanSimulationEnvironment(obs, gw2, run_id="m2", allow_open=True, reset_account=False)
+        self.assertEqual(gw2.submit_count, 1)
+        self.assertTrue(any(p.plan_id.startswith("plan_open_") for p in env2.plan_views()))
+
+    def test_replayed_identical_commit_does_not_spend_mutation_budget(self):
+        call = {"name": "submit_decision", "arguments": {"kind": "ignore", "evidence_refs": ["message:8089"],
+                                                          "expected_state_version": 2}}
+        # Two turns, as DeepSeek did in the month replay: commit, then the same commit again.
+        script = [{"tool_calls": [call]}, {"tool_calls": [call]}, {"final": {}}]
+        result, score = self._run("tl_real_8089_negation", script)
+        self.assertEqual(result.status.value, "succeeded")
+        self.assertEqual(result.final_snapshot.submit_count, 1)
+        self.assertTrue(score.hard_pass)
+
     def test_open_tool_is_opt_in(self):
         result, _ = self._run("tl_synth_explicit_short", _order(), allow_open=False)
         codes = [e["payload"].get("error_code") for e in result.events if e["kind"] == "tool_result"]

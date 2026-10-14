@@ -102,6 +102,7 @@ python -m src.lab.cli trace <run_id>    # 导出脱敏 trace（JSONL）并给出
 python -m src.lab.experiments.e2e_cli --model stub
 python -m src.lab.experiments.e2e_cli --model deepseek --out experiments/reports/e2e_deepseek.json
 python -m src.lab.experiments.real_replay --repeats 3   # 规则解析器 vs DeepSeek，同一批回放消息
+python -m src.lab.experiments.month_replay              # 近 30 天 POPIGOGO 逐条回放（需先抓取到 data/lab/popigogo_30d.json）
 ```
 
 `run` 默认用规则桩 agent；加 `--model deepseek` 用真实模型。审核策略：`disabled`（agent 决定即提交）、`on_ambiguity`（agent 提交 review 时交人审）、`always`（所有提交都交人审）。

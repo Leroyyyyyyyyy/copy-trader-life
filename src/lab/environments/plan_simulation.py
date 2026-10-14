@@ -38,6 +38,7 @@ class PlanSimulationEnvironment:
         credential: SimulatedCredential | None = None,
         review_policy: str = "disabled",
         allow_open: bool = False,
+        reset_account: bool = True,
     ):
         if review_policy not in REVIEW_POLICIES:
             raise ValueError(f"unknown review_policy {review_policy}")
@@ -56,8 +57,12 @@ class PlanSimulationEnvironment:
         self.allow_open = allow_open
         self.pending_proposal: dict[str, Any] | None = None
         self._decision: SubmittedDecision | None = None
-        max_version = max((p.state_version for p in bundle.plans), default=1)
-        self.gateway.reset(bundle.plans, max_version)
+        if reset_account:
+            max_version = max((p.state_version for p in bundle.plans), default=1)
+            self.gateway.reset(bundle.plans, max_version)
+        else:
+            # Continue a persisted account across runs (multi-message replay).
+            self.gateway.load()
 
     def tool_registry(self) -> ToolRegistry:
         reg = ToolRegistry()
