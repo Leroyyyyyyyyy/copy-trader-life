@@ -36,7 +36,10 @@ class PlanSimulationEnvironment:
         observation_policy: ObservationPolicy = ObservationPolicy.STATE_ONLY,
         sandbox: Any = None,
         credential: SimulatedCredential | None = None,
+        review_policy: str = "disabled",
     ):
+        if review_policy not in REVIEW_POLICIES:
+            raise ValueError(f"unknown review_policy {review_policy}")
         self.bundle = bundle
         self.gateway = gateway
         self.run_id = run_id
@@ -45,6 +48,10 @@ class PlanSimulationEnvironment:
         # L6: when set, a sensitive venue tool exists in the system. Whether the
         # agent may call it is decided by ToolPolicy, not by this environment.
         self.credential = credential
+        # L7: disabled = commit as before; on_ambiguity = a review decision is held
+        # for a human; always = every commit is held for a human.
+        self.review_policy = review_policy
+        self.pending_proposal: dict[str, Any] | None = None
         self._decision: SubmittedDecision | None = None
         max_version = max((p.state_version for p in bundle.plans), default=1)
         self.gateway.reset(bundle.plans, max_version)
@@ -77,7 +84,11 @@ class PlanSimulationEnvironment:
         reg.register(
             ToolSpec(
                 name="submit_decision",
-                description="Commit ignore or review without changing plan fields",
+                description=(
+                    "Commit ignore or review without changing plan fields. For review you "
+                    "may add referenced_plan_id, stop_loss, candidates and reason as a "
+                    "proposal for the human reviewer."
+                ),
                 mutating=True,
                 required_args=("kind", "evidence_refs"),
             )
@@ -171,6 +182,9 @@ class PlanSimulationEnvironment:
                     ),
                 }
             )
+            held = self._maybe_hold(name, decision, arguments)
+            if held is not None:
+                return held
             receipt = self.gateway.commit(
                 run_id=self.run_id,
                 decision=decision,
@@ -257,6 +271,9 @@ class PlanSimulationEnvironment:
                     "expected_state_version", self.gateway.state_version
                 ),
             )
+            held = self._maybe_hold(name, decision, arguments)
+            if held is not None:
+                return held
             receipt = self.gateway.commit(
                 run_id=self.run_id,
                 decision=decision,
@@ -314,6 +331,9 @@ class PlanSimulationEnvironment:
                     ),
                 }
             )
+        held = self._maybe_hold("commit_simulated_action", decision, action)
+        if held is not None:
+            return held
         receipt = self.gateway.commit(
             run_id=self.run_id,
             decision=decision,
@@ -338,6 +358,52 @@ class PlanSimulationEnvironment:
             "snapshot": self.gateway.snapshot(),
         }
 
+    def _maybe_hold(
+        self, tool: str, decision: SubmittedDecision, arguments: dict[str, Any]
+    ) -> Any:
+        """Queue the decision as a review proposal instead of committing it."""
+        hold = self.review_policy == "always" or (
+            self.review_policy == "on_ambiguity" and decision.kind == DecisionKind.REVIEW
+        )
+        if not hold:
+            return None
+        if self.pending_proposal is not None or self._decision is not None:
+            # One decision per run. Without this, a review submitted after a
+            # successful commit would be held and overwrite the recorded decision.
+            return ToolResult(
+                call_id="",
+                name=tool,
+                status=ToolStatus.ERROR,
+                error_code="decision_already_submitted",
+                retryable=False,
+                payload={"proposal": self.pending_proposal},
+            )
+        stop = decision.proposed_changes.get("stop_loss", arguments.get("stop_loss"))
+        try:
+            stop = None if stop is None else float(stop)
+        except (TypeError, ValueError):
+            stop = None
+        self.pending_proposal = {
+            "version": 1,
+            "kind": decision.kind.value,
+            "plan_id": decision.referenced_plan_id or arguments.get("referenced_plan_id"),
+            "stop_loss": stop,
+            "evidence_refs": list(decision.evidence_refs),
+            "candidates": [str(c) for c in arguments.get("candidates") or []],
+            "reason": str(arguments.get("reason") or ""),
+            "source": "agent",
+            "via_tool": tool,
+            "state_version": self.gateway.state_version,
+        }
+        self._decision = decision
+        return {
+            "status": "queued_for_review",
+            "review_policy": self.review_policy,
+            "proposal": self.pending_proposal,
+            "state_version": self.gateway.state_version,
+            "note": "Not committed. A human reviewer will confirm, modify or reject it.",
+        }
+
     def final_snapshot(self) -> FinalEnvironmentSnapshot:
         return FinalEnvironmentSnapshot(
             plans=self.gateway.plans(),
@@ -358,6 +424,9 @@ class PlanSimulationEnvironment:
     def cleanup(self) -> list[dict[str, Any]]:
         sandbox = "enabled_per_call_rm" if is_enabled(self.sandbox) else "disabled"
         return [{"resource": "sandbox", "action": "none_held", "mode": sandbox}]
+
+
+REVIEW_POLICIES = ("disabled", "on_ambiguity", "always")
 
 
 def _retryable_commit_error(code: str | None) -> bool:

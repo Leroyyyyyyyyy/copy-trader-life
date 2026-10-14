@@ -45,6 +45,7 @@ class RunStatus(str, Enum):
     CANCELLED = "cancelled"
     REJECTED = "rejected"
     INTERRUPTED = "interrupted"
+    WAITING_REVIEW = "waiting_review"
 
 
 class ToolStatus(str, Enum):

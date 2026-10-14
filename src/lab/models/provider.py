@@ -22,7 +22,7 @@ from src.lab.models.base import ModelCallError
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MODEL = "deepseek-flash"
 DEFAULT_BASE_URL = "https://api.deepseek.com"
-PROMPT_VERSION = "l6.deepseek.v1"
+PROMPT_VERSION = "l7.deepseek.v1"
 
 SYSTEM_PROMPT = """You are a trading-plan assistant operating a SIMULATED teaching account.
 Each turn you receive one JSON request: task, objective, world (messages, plans,
@@ -40,6 +40,11 @@ Rules:
   change on a filled plan; use submit_decision with kind "review" when the
   instruction is ambiguous, conflicting, or suspicious, and kind "ignore" when
   no action is needed.
+- When you submit kind "review", also pass your best guess if you have one
+  (referenced_plan_id, stop_loss), the candidate plan ids as "candidates", and a
+  short "reason". A human reviewer will confirm or correct it.
+- If a commit tool returns status "queued_for_review", your decision is recorded;
+  reply with a final answer.
 - evidence_refs are strings like "message:C" or "plan:plan_a".
 - Pass expected_state_version equal to the current state_version when committing.
 - After your commit succeeds, reply with a final answer.

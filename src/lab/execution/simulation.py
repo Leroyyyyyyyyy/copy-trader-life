@@ -10,12 +10,13 @@ from typing import Any
 from src.lab.domain import (
     CommitReceipt,
     DecisionKind,
+    PlanStatus,
     PlanView,
     SubmittedDecision,
     decision_to_dict,
 )
 from src.lab.execution.validator import DecisionValidator
-from src.lab.runtime.store import RunStore
+from src.lab.runtime.store import RunStore, StaleAccountError
 
 
 def _payload_hash(decision: SubmittedDecision) -> str:
@@ -24,9 +25,18 @@ def _payload_hash(decision: SubmittedDecision) -> str:
 
 
 class SimulationGateway:
-    def __init__(self, store: RunStore, validator: DecisionValidator | None = None):
+    def __init__(
+        self,
+        store: RunStore,
+        validator: DecisionValidator | None = None,
+        *,
+        account_id: str | None = None,
+    ):
         self.store = store
         self.validator = validator or DecisionValidator()
+        # L7: with an account_id the account survives the process, so a review
+        # answered later from the CLI sees (and changes) the same account.
+        self.account_id = account_id
         self._plans: dict[str, PlanView] = {}
         self._state_version = 1
         self._submit_count = 0
@@ -35,6 +45,46 @@ class SimulationGateway:
         self._plans = {p.plan_id: p for p in plans}
         self._state_version = state_version
         self._submit_count = 0
+        if self.account_id is not None:
+            self.store.put_account(self.account_id, self._account_payload())
+
+    def load(self) -> bool:
+        """Re-read the persisted account. Returns False if there is none."""
+        if self.account_id is None:
+            return False
+        raw = self.store.get_account(self.account_id)
+        if raw is None:
+            return False
+        self._plans = {p["plan_id"]: _plan_from_dict(p) for p in raw["plans"]}
+        self._state_version = int(raw["state_version"])
+        self._submit_count = int(raw["submit_count"])
+        return True
+
+    def external_update(self, plan_id: str, *, stop_loss: float) -> int:
+        """A change made outside this run (another operator, venue sync).
+
+        No receipt: it is not a decision of this run. It bumps state_version, which
+        is what makes an older review approval stale.
+        """
+        self.load()
+        plan = self._plans[plan_id]
+        self._state_version += 1
+        self._plans[plan_id] = replace(plan, stop_loss=float(stop_loss), state_version=self._state_version)
+        if self.account_id is not None:
+            self.store.put_account(self.account_id, self._account_payload())
+        return self._state_version
+
+    def _account_payload(
+        self,
+        plans: dict[str, PlanView] | None = None,
+        state_version: int | None = None,
+        submit_count: int | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "plans": [p.to_dict() for p in (plans if plans is not None else self._plans).values()],
+            "state_version": self._state_version if state_version is None else state_version,
+            "submit_count": self._submit_count if submit_count is None else submit_count,
+        }
 
     @property
     def state_version(self) -> int:
@@ -132,7 +182,12 @@ class SimulationGateway:
         )
         # L6: persist the receipt before applying. If the write fails, nothing is
         # applied, so a retry cannot double-apply a mutation whose receipt was lost.
+        account = None
+        if self.account_id is not None:
+            account = self._account_payload(next_plans, next_version, self._submit_count + 1)
         try:
+            # With a persisted account, receipt and account change are one SQL
+            # transaction: either both land or neither does.
             self.store.put_commit(
                 idempotency_key=key,
                 run_id=run_id,
@@ -140,10 +195,29 @@ class SimulationGateway:
                 decision_version=decision_version,
                 payload_hash=digest,
                 receipt=receipt.to_dict(),
+                account_id=self.account_id,
+                account=account,
+                account_expected_version=self._state_version if account is not None else None,
             )
+        except StaleAccountError as exc:
+            return rejected(f"stale_state_version:db:{exc}")
         except Exception as exc:  # noqa: BLE001 - surfaced as a retryable commit error
             return rejected(f"state_write_failed:{type(exc).__name__}")
         self._plans = next_plans
         self._state_version = next_version
         self._submit_count += 1
         return receipt
+
+
+def _plan_from_dict(raw: dict[str, Any]) -> PlanView:
+    return PlanView(
+        plan_id=str(raw["plan_id"]),
+        symbol=str(raw["symbol"]),
+        status=PlanStatus(raw["status"]),
+        side=str(raw["side"]),
+        cost_basis=raw.get("cost_basis"),
+        stop_loss=raw.get("stop_loss"),
+        take_profit=raw.get("take_profit"),
+        state_version=int(raw.get("state_version", 1)),
+        note=str(raw.get("note", "")),
+    )

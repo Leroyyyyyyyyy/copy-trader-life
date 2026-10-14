@@ -318,6 +318,8 @@ F6 落地时固定的 L6 入口：`AgentHarness(policy=ToolPolicy(mode="enforce"
 
 如果等待期间账户变化，旧确认不能用于新动作：返回 stale，生成新证据卡；修正计划、价格等关键字段后必须重新检查来源与约束。评估分别记录 agent 初始错误率、人工修正后完成率、审核次数与人工耗时，不把人工完成的修复记成模型独立成功。批量测试可用预先定义的模拟 reviewer，但结果标明非真人体验。
 
+F7 落地时固定的 L7 入口：`PlanSimulationEnvironment(review_policy="disabled"|"on_ambiguity"|"always")` 在需要复核时不提交，只记 `pending_proposal`；`interaction.coordinator.run_task` 在 run 结束后调用 `ReviewService.open_card`，把卡写入 `RunStore.reviews`、run 标为 `waiting_review` 并释放 worker。`ReviewService.respond(card_id, revision, action, changes)` 的检查顺序：response_id 幂等 → 卡状态/过期 → revision → 可编辑字段（仅 `plan_id`、`stop_loss`）→ 重读账户，版本变化则 revision+1 并返回 `stale_state` → 构造 decision（修改生成新 decision version）→ 校验器与止损只收紧规则 → 经 `SimulationGateway.commit` 提交（fence、回执照常生效）。账户在 `RunStore.accounts` 持久化，回执与账户在同一 SQL 事务内写入，并对账户版本做 compare-and-swap，防止跨进程丢失更新。`confirm` 表示执行 agent 的提议；无具体动作的 review 只能 modify 或 reject。
+
 #### 1.7.9 Eval 在框架中的具体位置
 
 本阶段目录是 `src/lab/evals/`，独立于 harness 的决策路径，且不依赖未来 `training/rewards/`。TaskLoader 向 agent 只提供 observation bundle；EvalRunner 从单独位置读取 EvalSpec，并根据不可变 trace 与终态评分。
@@ -1393,11 +1395,11 @@ outputs:
 - [ ] H3：完成沙箱程序批量模拟、单次提交与失败恢复。
 - [ ] L2–L3：实际触发模型压缩，完成记忆与 Skills 三组对照及加载校验。
 - [x] L4–L5：完成多 agent 并发和 LangGraph 对照。
-- [ ] L6–L7：完成隔离、故障恢复与人工复核实验。
+- [x] L6–L7：完成隔离、故障恢复与人工复核实验（F6、F7，见 handoff）。
 - [ ] L9–L10：完成 SFT/RL 小闭环与 rollout 系统实验。
 - [ ] 选做 L8 / L11，并完成结业报告。
 
-当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。F0–F6 已有代码与测试；F7 尚未实施。资料链接保留在对应知识点旁。
+当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。F0–F7 已全部有代码与测试，本阶段已停在 L7。资料链接保留在对应知识点旁。
 
 <a id="milestones"></a>
 

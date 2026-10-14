@@ -1,0 +1,10 @@
+{
+  "task_id": "tl_f7_two_eth_plans",
+  "family_id": "review_resolution",
+  "split": "l7_review",
+  "environment_kind": "plan_simulation",
+  "objective": "Process the latest channel message for this simulated account. If you cannot determine the exact plan or price, submit review with your best proposal, the candidate plans and a reason. Commit at most once.",
+  "observation_bundle_id": "tl_f7_two_eth_plans",
+  "visible_at": "2026-09-01T12:00:00Z",
+  "initial_snapshot_id": "snap_tl_f7_two_eth_plans_v1"
+}

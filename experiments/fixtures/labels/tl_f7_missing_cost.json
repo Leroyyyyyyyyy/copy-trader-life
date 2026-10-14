@@ -1,0 +1,44 @@
+{
+  "task_id": "tl_f7_missing_cost",
+  "family_id": "review_resolution",
+  "material_version": "f7.1",
+  "verifier_version": "f0.plan_sl.v1",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "update",
+      "referenced_plan_id": "plan_a",
+      "stop_loss": 1810,
+      "require_state_change": true,
+      "notes": "Reviewer knows the fill was 1810. The agent cannot derive it."
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_a",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": null,
+      "stop_loss": 1650,
+      "take_profit": 2200,
+      "state_version": 3,
+      "note": "fill price not yet synced from venue"
+    },
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 108000,
+      "stop_loss": 100000,
+      "take_profit": 120000,
+      "state_version": 2,
+      "note": "unrelated open BTC plan"
+    }
+  ]
+}

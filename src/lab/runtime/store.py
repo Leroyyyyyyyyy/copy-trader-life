@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Any, Optional
 
 
+class StaleAccountError(Exception):
+    """The persisted account moved since the caller read it (optimistic lock)."""
+
+
 class RunStore:
     def __init__(self, db_path: Path | str):
         self.db_path = Path(db_path)
@@ -61,6 +65,23 @@ class RunStore:
             CREATE TABLE IF NOT EXISTS fences (
               run_id TEXT PRIMARY KEY,
               reason TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS accounts (
+              account_id TEXT PRIMARY KEY,
+              payload_json TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS reviews (
+              card_id TEXT PRIMARY KEY,
+              run_id TEXT NOT NULL,
+              status TEXT NOT NULL,
+              revision INTEGER NOT NULL,
+              payload_json TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS review_responses (
+              response_id TEXT PRIMARY KEY,
+              card_id TEXT NOT NULL,
+              payload_hash TEXT NOT NULL,
+              result_json TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS inbox (
               event_id TEXT PRIMARY KEY,
@@ -170,38 +191,47 @@ class RunStore:
         decision_version: int,
         payload_hash: str,
         receipt: dict[str, Any],
+        account_id: Optional[str] = None,
+        account: Optional[dict[str, Any]] = None,
+        account_expected_version: Optional[int] = None,
     ) -> None:
-        with self._lock:
-            self._put_commit(
-                idempotency_key, run_id, decision_id, decision_version, payload_hash, receipt
-            )
+        """Insert the receipt; if an account is given, save it in the same transaction.
 
-    def _put_commit(
-        self,
-        idempotency_key: str,
-        run_id: str,
-        decision_id: str,
-        decision_version: int,
-        payload_hash: str,
-        receipt: dict[str, Any],
-    ) -> None:
-        self._conn.execute(
-            """
-            INSERT INTO commits(
-              idempotency_key, run_id, decision_id, decision_version,
-              payload_hash, receipt_json
-            ) VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                idempotency_key,
-                run_id,
-                decision_id,
-                decision_version,
-                payload_hash,
-                json.dumps(receipt),
-            ),
-        )
-        self._conn.commit()
+        `account_expected_version` is a compare-and-swap: another process may have
+        changed the account after this caller loaded it, and that change must not be
+        overwritten.
+        """
+        with self._lock:
+            try:
+                if account_id is not None and account_expected_version is not None:
+                    row = self._conn.execute(
+                        "SELECT payload_json FROM accounts WHERE account_id=?", (account_id,)
+                    ).fetchone()
+                    current = None if row is None else json.loads(row["payload_json"])["state_version"]
+                    if current != account_expected_version:
+                        raise StaleAccountError(f"{account_expected_version}!={current}")
+                self._conn.execute(
+                    """
+                    INSERT INTO commits(
+                      idempotency_key, run_id, decision_id, decision_version,
+                      payload_hash, receipt_json
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        idempotency_key,
+                        run_id,
+                        decision_id,
+                        decision_version,
+                        payload_hash,
+                        json.dumps(receipt),
+                    ),
+                )
+                if account_id is not None and account is not None:
+                    self._save_account(account_id, account)
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
 
     def put_checkpoint(self, *, run_id: str, payload: dict[str, Any]) -> None:
         with self._lock:
@@ -235,6 +265,108 @@ class RunStore:
         if row is None:
             return None
         return json.loads(row["payload_json"])
+
+    def get_run(self, run_id: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT task_id, status, terminal_reason, payload_json FROM runs WHERE run_id=?",
+                (run_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "run_id": run_id,
+            "task_id": row["task_id"],
+            "status": row["status"],
+            "terminal_reason": row["terminal_reason"],
+            "payload": json.loads(row["payload_json"]),
+        }
+
+    # --- L7: persisted simulated accounts and review cards ----------------------
+
+    def _save_account(self, account_id: str, account: dict[str, Any]) -> None:
+        self._conn.execute(
+            """
+            INSERT INTO accounts(account_id, payload_json) VALUES (?, ?)
+            ON CONFLICT(account_id) DO UPDATE SET payload_json=excluded.payload_json
+            """,
+            (account_id, json.dumps(account)),
+        )
+
+    def put_account(self, account_id: str, account: dict[str, Any]) -> None:
+        with self._lock:
+            self._save_account(account_id, account)
+            self._conn.commit()
+
+    def get_account(self, account_id: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload_json FROM accounts WHERE account_id=?", (account_id,)
+            ).fetchone()
+        return None if row is None else json.loads(row["payload_json"])
+
+    def put_review(self, card: dict[str, Any]) -> None:
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO reviews(card_id, run_id, status, revision, payload_json)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(card_id) DO UPDATE SET
+                  status=excluded.status,
+                  revision=excluded.revision,
+                  payload_json=excluded.payload_json
+                """,
+                (
+                    card["card_id"],
+                    card["run_id"],
+                    card["status"],
+                    int(card["revision"]),
+                    json.dumps(card, ensure_ascii=False),
+                ),
+            )
+            self._conn.commit()
+
+    def get_review(self, card_id: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload_json FROM reviews WHERE card_id=?", (card_id,)
+            ).fetchone()
+        return None if row is None else json.loads(row["payload_json"])
+
+    def list_reviews(self, status: Optional[str] = None) -> list[dict[str, Any]]:
+        with self._lock:
+            if status is None:
+                rows = self._conn.execute(
+                    "SELECT payload_json FROM reviews ORDER BY rowid"
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT payload_json FROM reviews WHERE status=? ORDER BY rowid", (status,)
+                ).fetchall()
+        return [json.loads(r["payload_json"]) for r in rows]
+
+    def get_review_response(self, response_id: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload_hash, result_json FROM review_responses WHERE response_id=?",
+                (response_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {"payload_hash": row["payload_hash"], "result": json.loads(row["result_json"])}
+
+    def put_review_response(
+        self, *, response_id: str, card_id: str, payload_hash: str, result: dict[str, Any]
+    ) -> None:
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT OR IGNORE INTO review_responses(response_id, card_id, payload_hash, result_json)
+                VALUES (?, ?, ?, ?)
+                """,
+                (response_id, card_id, payload_hash, json.dumps(result, ensure_ascii=False)),
+            )
+            self._conn.commit()
 
     # --- L6: commit fences and event inbox -------------------------------------
 

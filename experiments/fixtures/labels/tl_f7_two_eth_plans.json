@@ -1,0 +1,55 @@
+{
+  "task_id": "tl_f7_two_eth_plans",
+  "family_id": "review_resolution",
+  "material_version": "f7.1",
+  "verifier_version": "f0.plan_sl.v1",
+  "evidence_constraints": {
+    "min_evidence_refs": 1,
+    "require_submit": true,
+    "max_submits": 1
+  },
+  "acceptable_outcomes": [
+    {
+      "kind": "update",
+      "referenced_plan_id": "plan_eth_2",
+      "stop_loss": 1900,
+      "require_state_change": true,
+      "notes": "Desk confirms C refers to the A2 trade. Agent cannot know; a reviewer can."
+    }
+  ],
+  "initial_plans": [
+    {
+      "plan_id": "plan_eth_1",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1800,
+      "stop_loss": 1650,
+      "take_profit": 2100,
+      "state_version": 2,
+      "note": "from A1"
+    },
+    {
+      "plan_id": "plan_eth_2",
+      "symbol": "ETH",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 1900,
+      "stop_loss": 1750,
+      "take_profit": 2300,
+      "state_version": 2,
+      "note": "from A2"
+    },
+    {
+      "plan_id": "plan_btc",
+      "symbol": "BTC",
+      "status": "filled",
+      "side": "buy",
+      "cost_basis": 108000,
+      "stop_loss": 100000,
+      "take_profit": 120000,
+      "state_version": 2,
+      "note": "unrelated open BTC plan"
+    }
+  ]
+}

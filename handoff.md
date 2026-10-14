@@ -1,7 +1,7 @@
 # Tradelife 交接 · 当前执行 L0–L7
 
-> 更新：2026-10-14（F6 故障集、闸门、取消/超时与结构化 trace 已落地；首次接入 DeepSeek）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
-> 当前明确任务：实施 L0–L7，按 F0–F7 推进；下一批为 F7（L7 人工复核/受控恢复/完整批量 eval）。终点为 F7/L7。旧交接的“下一步实盘验证 / 切主网”不再适用。
+> 更新：2026-10-14（F7 人工复核、CLI、旧审批失效与审核策略批量 eval 已落地；**L0–L7 全部实施完毕**）。详细设计只维护在 [Agent 学习与实施手册](docs/agent_architecture_v2.md)。
+> 当前明确任务：L0–L7 已按 F0–F7 实施完毕，本阶段停在 L7。剩余工作是本人理解练习与答辩准备；L8–L11、SFT/RL 不在本次范围。旧交接的“下一步实盘验证 / 切主网”不再适用。
 
 ## 1. 用户目标和协作要求
 
@@ -24,6 +24,7 @@
 | L4 多角色编排 / 证据汇合 | 已实现；`tests.lab.test_l4_roles` 9 passed |
 | L5 native/LangGraph WorkflowAdapter | 已实现；`tests.lab.test_l5_workflows` 9 passed |
 | L6 故障集 / 闸门 / trace / DeepSeek 适配器 | 已实现；`tests.lab.test_l6_faults` 15 passed；报告 `experiments/reports/f6_deepseek_2026-10-14.json` |
+| L7 审核卡 / CLI 复核 / stale / 审核策略批量 eval | 已实现；`tests.lab.test_l7_review` 13 passed；报告 `experiments/reports/f7_*_2026-10-14.json` |
 | 凭证、网络与账户状态 | 本轮未核验 live；lab 不依赖 |
 | Git | 仓库存在；提交与否由本人决定 |
 
@@ -31,15 +32,15 @@
 
 接手先核对文件与已有修改；若别的 agent 已有成果，应保留并从真实完成位置继续，不按旧状态覆盖工作。
 
-## 3. 下一批做 F7（F0–F6 已完成）
+## 3. 当前进度：F0–F7 已完成，停在 L7
 
-F6 已交付：`AgentHarness` 增加 `policy`（`ToolPolicy` enforce/audit）、`cancel_token`、`model_timeout_sec`；事件带 `trace_id / t_ms / actor` 并在落盘前脱敏。取消/超时不杀底层调用，而是停止等待、写 fence、丢弃迟到结果；receipt 先落盘再改账户；`EventInbox` 去重同一外部事件。12 个确定性故障用例全部达到预期状态，并带原始证据、归因、阶段耗时和清理记录。首次接真实模型：`src/lab/models/provider.py` 的 DeepSeek 适配器（`deepseek-flash`，JSON 模式）。实测：`.venv/bin/python -m unittest discover -s tests/lab -t .`（88 lab tests 通过）；`python -m src.lab.experiments.f6_faults --part all --model deepseek --repeats 3`。
+F7 已交付：`PlanSimulationEnvironment(review_policy=...)` 在需要复核时只记录提议、不提交；`interaction/coordinator.run_task` 在 run 结束后开审核卡并把 run 标为 `waiting_review`；`interaction/review.ReviewService.respond` 按“幂等 → 卡状态/过期 → revision → 可编辑字段 → 重读账户（变了就 stale）→ 重新校验 → 经网关提交”处理人的回复；模拟账户持久化在 SQLite，回执与账户同一事务写入并做版本 compare-and-swap；`python -m src.lab.cli` 提供 run / review / account / evaluate。实测：`.venv/bin/python -m unittest discover -s tests/lab -t .`（101 lab tests 通过，3 项因无 Docker 跳过）；`python -m src.lab.cli evaluate --model deepseek`。
 
-F7 目标见手册 1.7.8：`WAITING_REVIEW` 落盘后释放 worker；CLI 提交 review response 时校验 revision / decision version / 状态；等待期间账户变化则旧确认 stale；自动完成与人工辅助完成分开统计；完整批量 eval。
+未做（有意留下）：DeepEval 适配器与 LLM judge（手册 A2 中的可选部分；确定性 verifier 仍是主判据）；真人审核实验（目前只有模拟审核员）；网页审核界面。
 
 评测框架仍是 **DeepEval + 自定义确定性 verifier**。DeepEval 适配器等轨迹稳定后再接。
 
-按 F7 继续可评审增量，完成后停在 L7。已授权范围内不需要每改一个文件都重新申请确认；遇到必要缺失输入时单独说明。
+本阶段已停在 L7，不再新增批次。已授权范围内不需要每改一个文件都重新申请确认；遇到必要缺失输入时单独说明。
 
 ## 4. 实施边界与代码线索
 
@@ -85,7 +86,7 @@ F7 目标见手册 1.7.8：`WAITING_REVIEW` 落盘后释放 worker；CLI 提交 
 1.7 框架、1.8 制作与答辩要求、13.1 目录，以及当前批次验收。
 架构手册是唯一设计来源，不再新建第二份架构文档。
 
-先核对实际文件与已有修改。F0–F6 已落地则从 F7 继续；若更早批次缺失，
+先核对实际文件与已有修改。F0–F7 均已落地；若发现某批缺失，
 从真实缺口补起。保留已有成果，不要覆盖。
 每批给出可运行增量、实际检查结果、关键代码和 trace 讲解、本人理解练习。
 代码验证与本人理解分别记录，不代替本人认定已掌握。
@@ -270,6 +271,67 @@ F7 目标见手册 1.7.8：`WAITING_REVIEW` 落盘后释放 worker；CLI 提交 
 
 掌握状态：未开始练习。
 
-## 16. 每批完成后更新什么
+## 16. L7 本人理解与答辩（代码已验证 / 本人理解待练习）
+
+解决的问题：agent 拿不准时（两个候选计划、成本价未知、消息可疑），要能停下来请人拍板，再把事做完；同时保证人的确认不会变成绕过校验的后门，过时的确认不会被执行，人帮忙完成的结果不会被算成模型的成功。
+
+关键路径：
+1. `run_task` 用 `review_policy` 构造环境 → agent 照常跑 → 需要复核时 `_maybe_hold` 只把决定存成 `pending_proposal`（含最佳猜测、候选、理由），不碰网关。
+2. run 结束 → `ReviewService.open_card`：拒绝已被 fence 的 run；写审核卡（原消息、提议、字段来源、候选计划、缺失/冲突、`simulate_action` 算出的模拟影响、过期时间、当时的 `state_version`）→ run 标 `waiting_review` → worker 退出，不挂着等人。
+3. 人通过 CLI 回复 → `respond`：
+   - 同一 response_id 同内容直接返回旧结果（`reused`），内容不同报 `response_payload_mismatch`；
+   - 卡已处理 → `already_resolved`；过期 → `expired`（run 记 `timed_out`）；revision 不对 → `stale_revision`；
+   - 只能改 `plan_id`、`stop_loss`，其他字段 `field_not_editable`；
+   - **重读账户**：版本和卡上不同 → revision+1、重算卡片，返回 `stale_state`，不执行；
+   - 生成 decision：confirm = 执行 agent 的提议（review 带具体猜测时就是那个 update，没有具体动作则 `nothing_to_confirm`）；modify = 新的 decision version（v2），来源记 `human:<名字>`；reject = 以 review 结案、不改账户；
+   - 重新跑 `DecisionValidator` 和“止损只能收紧”→ 不过则 `revalidation_failed`，卡保持待审；
+   - 经 `SimulationGateway.commit`（`decision_id="review"`）提交，fence、回执、版本检查全部照常生效。
+4. 账户持久化（`RunStore.accounts`）：回执与账户在一个 SQL 事务里写；写之前比对账户版本（compare-and-swap），另一个进程刚改过就返回 `stale_state_version:db`，审核服务据此同样走 stale 流程。
+
+设计取舍：
+- 审核结论走和 agent 一样的网关，不开“人工专用通道”。这样 F6 的 fence、L5 的回执幂等、L6 的风控规则对人也生效：已取消的 run 不会因为有人点了确认而复活（`run_fenced`）。
+- stale 用账户整体的 `state_version` 判断，简单但偏保守：改了任意一个计划都会让待审批失效（实验里改的是非目标计划 plan_eth_1，也触发了 stale）。更细的做法是只比对目标计划的版本。
+- 只持久化“已生效”的回复用于幂等；stale/校验失败的回复不记，必须针对新 revision 重新回答，避免旧回复被重放后生效。
+- 单进程内存账户换成 SQLite 持久化账户，是因为 CLI 每条命令都是新进程；这也顺带把 L5 笔记里“只有账户修改、回执、进度在同一事务里才能一起保证”变成了现实（模拟环境内）。
+
+失败案例（均有测试）：
+- 待审期间外部把 plan_eth_1 止损改成 1660 → 用 r1 回复得到 `stale_state`、新 r2；再用 r1 回复得到 `stale_revision`；用 r2 回复才提交，`expected_state_version=3`。
+- 人把止损改成 1500（放宽）→ `revalidation_failed: risk_stop_widened`，账户不变，卡仍待审。
+- 想改 `take_profit` → `field_not_editable`。
+- 同一回复发两次 → 第二次 `reused`，`submit_count` 仍为 1；之后再发另一个回复 → `already_resolved`。
+- 卡过 25 小时 → `expired`，run 记 `timed_out`。
+- run 被 fence 后再确认 → `run_fenced`，卡记 `closed_fenced`。
+- 两个进程同时操作账户 → 后提交的一方被 compare-and-swap 拒绝，先改的值保留（不丢失更新）。
+- DeepSeek 先提交 update 又追加 review（真实行为）→ 第二个决定被 `decision_already_submitted` 拒绝，不覆盖已提交的决定。
+
+实验依据（`python -m src.lab.cli evaluate`；6 个任务：2 个 F7 复核任务、2 个 F0 任务、2 个 F6 对抗任务）：
+- 审核员是**模拟的**：`oracle_sim` 读隐藏标签，代表“认真且知道答案的人”，是复核收益的上限；`rubber_stamp` 不看内容，有具体提议就批准。人工耗时用假设的成本模型（读卡 1.5 分钟、修改 1.0 分钟等），不是实测。每格只有 6 个样例、1 次重复，只能看方向。
+- 结果分四类：`auto_success`（没经过人）、`reviewed_success`（经过人，但 agent 自己的决定或具体猜测本来就对，人只是批准）、`assisted_success`（人的修正是必要的）、`fail`/`unresolved`。
+
+| 策略 / 审核员 | DeepSeek 完成率 | 其中人必要的修正 | 误操作 | 人工分钟 | 规则桩完成率 |
+|---|---|---|---|---|---|
+| disabled | 4/6 | 0 | 0 | 0 | 3/6（1 次误操作） |
+| on_ambiguity · oracle | 6/6 | 1 | 0 | 8.9 | 5/6（1 次误操作） |
+| always · oracle | 6/6 | 1 | 0 | 12.5 | 6/6 |
+| on_ambiguity · rubber_stamp | 5/6 | 0 | 0 | 6.4 | 3/6（1 次误操作） |
+| always · rubber_stamp | 4/6 | 0 | 0 | 11.8 | 3/6（1 次误操作） |
+
+- 解读：
+  1. 对 DeepSeek，“仅歧义审核”和“全部审核”完成率相同，人工时间少约 30%；“全部审核”里 4/6 的审核是多余的（agent 本来就对）。
+  2. 人真正不可替代的只有 `tl_f7_missing_cost`：成本价 1810 这个信息 agent 拿不到，只有人知道。两个 ETH 计划的任务里，DeepSeek 的最佳猜测（plan_eth_2、1900）本来就对，人只是批准。
+  3. 规则桩说明了“仅歧义审核”的盲区：agent **自信地做错**时（凭证任务里直接改了止损）不会触发审核，只有“全部审核”加认真的审核员能拦下。
+  4. 敷衍的审核员只增加成本、不增加正确率。在 closed_plan 任务里，它批准了“给已平仓计划改止损”，是重新校验（`plan_not_filled`）挡住了它。所以“人确认后还要再校验”是必要的。
+- 第一次 DeepSeek 运行（`f7_deepseek_2026-10-14_run1_prefix.json`）暴露了两个 bug：提交后再追加 review 会覆盖已提交的决定；run 在提议入队后耗尽预算时，提议被丢弃、没开卡。两者已修复并加测试。第二次运行（`f7_deepseek_2026-10-14.json`）没有误操作，但两次样本不同，修复的证据是单测，不是这两份报告的对比。
+- 两次 DeepSeek 运行合计约 20 万输入、5.5 万输出 token。
+
+本人练习（待做）：
+1. 用 CLI 亲手走一遍：`run` → `review show` → `account drift` → 用旧 revision 回复 → 看 stale → 用新 revision 修改 → `account show` 核对。每一步先预测输出再执行。
+2. 答辩题：人已经确认了，为什么还要重读账户、重新校验？各举一个本项目里的具体例子。
+3. 答辩题：“仅歧义审核”的盲区是什么？表格里哪一行证明了它？怎么改进（提示：按风险或置信度触发、抽样审核）？
+4. 变式：把 stale 判断从账户整体版本改成只看目标计划版本，预测 `tl_f7_two_eth_plans` 的 drift 场景结果会怎么变，以及这样做的风险。
+
+掌握状态：未开始练习。
+
+## 17. 每批完成后更新什么
 
 handoff：记录日期、真实批次状态、修改入口、执行命令与结果、问题、下一步及本人理解状态。README：只补真实安装/运行入口与依赖。手册：更新设计决策与验收清单，避免重复存放实现日志。

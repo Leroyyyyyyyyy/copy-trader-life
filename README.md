@@ -23,14 +23,14 @@
 | L4：多角色编排、只读 fan-out、证据汇合 | 已实现（确定性角色；非 LangGraph） |
 | L5：native / LangGraph WorkflowAdapter 对照 | 已实现；共用节点，checkpoint 不含账户 |
 | L6：故障集、权限/风控闸门、取消与超时、结构化 trace | 已实现；DeepSeek 用于对抗输入对照，故障注入用确定性脚本模型 |
-| 当前接手起点 | F7：L7 人工复核、受控恢复与完整批量 eval |
-| 当前终点 | F7 / L7：人工审核、恢复和完整批量 eval |
+| L7：审核卡、CLI 复核、旧审批失效、审核策略批量 eval | 已实现；模拟审核员（非真人），DeepSeek 与规则桩各一份报告 |
+| 当前状态 | **L0–L7 已全部实施**（F0–F7）。后续 L8–L11 不在本次范围 |
 | L8–L11、SFT/RL、推理集群与模型发布 | 后续资料，不属于本次实施 |
 
-F0–F6 实测：
+F0–F7 实测：
 
 ```bash
-.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults -v
+.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review -v
 ```
 
 历史 testnet 记录见 handoff，不代表当前交易环境已验证。
@@ -69,27 +69,44 @@ python -m unittest tests.test_parser tests.test_risk -v
 
 解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。
 
-Lab F0–F6（离线，不改 `data/state.json`）：
+Lab F0–F7（离线，不改 `data/state.json`）：
 
 ```bash
 source .venv/bin/activate   # macOS 若无 python，用 .venv/bin/python
-python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults -v
+python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults tests.lab.test_l7_review -v
 python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
 python -m src.lab.experiments.h2_observation
 python -m src.lab.experiments.f6_faults --part all --model stub
+python -m src.lab.cli evaluate --model stub
 ```
 
-F6 真实模型对照（会调用 DeepSeek API 并产生费用）：
+L7 人工复核 CLI（默认库 `data/lab/lab.sqlite`，可用 `--db` 指定）：
+
+```bash
+python -m src.lab.cli run --task tl_f7_two_eth_plans --review-policy on_ambiguity   # 输出 run_id / card_id
+python -m src.lab.cli review list
+python -m src.lab.cli review show card_<run_id>
+python -m src.lab.cli review modify card_<run_id> --revision 1 --set plan_id=plan_eth_2 --set stop_loss=1900
+python -m src.lab.cli review confirm card_<run_id> --revision 1
+python -m src.lab.cli review reject card_<run_id> --revision 1 --reason "..."
+python -m src.lab.cli account show --account acct_<run_id>
+python -m src.lab.cli account drift --account acct_<run_id> --plan plan_eth_1 --stop-loss 1660   # 模拟外部改动，使待审批变 stale
+```
+
+`run` 默认用规则桩 agent；加 `--model deepseek` 用真实模型。审核策略：`disabled`（agent 决定即提交）、`on_ambiguity`（agent 提交 review 时交人审）、`always`（所有提交都交人审）。
+
+F6/F7 真实模型实验（会调用 DeepSeek API 并产生费用）：
 
 ```bash
 python -m src.lab.experiments.f6_faults --part all --model deepseek --repeats 3 --out experiments/reports/f6_deepseek.json
+python -m src.lab.cli evaluate --model deepseek --out experiments/reports/f7_deepseek.json
 ```
 
 Lab 的 DeepSeek 适配器（`src/lab/models/provider.py`）只从 `.env` 读取 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、可选 `DEEPSEEK_LAB_MODEL`（默认 `deepseek-flash`）三行，不把整份 `.env` 载入进程环境。
 
 H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。L5 的 LangGraph adapter 需要 `langgraph`（见 `requirements.txt`）；native adapter 不依赖它。
 
-观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。L6 闸门在 `src/lab/tools/policy.py`，trace 脱敏/归因在 `src/lab/observability/`，取消与事件去重在 `src/lab/runtime/cancel.py`、`inbox.py`，故障集与对照在 `src/lab/experiments/f6_faults.py`，报告写入 `experiments/reports/`。
+观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。L6 闸门在 `src/lab/tools/policy.py`，trace 脱敏/归因在 `src/lab/observability/`，取消与事件去重在 `src/lab/runtime/cancel.py`、`inbox.py`，故障集与对照在 `src/lab/experiments/f6_faults.py`，报告写入 `experiments/reports/`。L7 复核在 `src/lab/interaction/`（`review.py` 审核卡与响应校验，`coordinator.py` 运行并转审），CLI 在 `src/lab/cli.py`，审核策略批量评测在 `src/lab/experiments/f7_review.py`。
 
 ## 现有纸交易入口（非新 lab）
 
@@ -113,4 +130,4 @@ python -m src.main --paper
 
 `.gitignore` 排除了 `data/`、`logs/`、`.env` 与 session，复制代码可能没有历史素材。缺素材时先用明确标注的教学样例做 F0，不伪造历史评测结果。凭证在目标环境单独配置，不把私钥或登录态当作学习材料传递。
 
-目前没有可部署的 lab 包或启动命令。先完成 F0–F7；实现出入口后，将真实安装/运行步骤更新到这里。
+Lab 入口为 `python -m src.lab.cli`（见上文）。没有打包或部署；数据库默认在被 git 忽略的 `data/lab/`。
