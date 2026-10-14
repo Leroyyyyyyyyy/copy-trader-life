@@ -44,3 +44,38 @@ class BudgetTracker:
         self.state.program_tool_calls += extra
         if mutated:
             self.state.mutates += 1
+
+    def restore(self, snapshot: dict[str, int] | BudgetState | None) -> None:
+        if snapshot is None:
+            return
+        if isinstance(snapshot, BudgetState):
+            self.state = BudgetState(
+                model_calls=snapshot.model_calls,
+                tool_calls=snapshot.tool_calls,
+                mutates=snapshot.mutates,
+                program_tool_calls=snapshot.program_tool_calls,
+            )
+            return
+        self.state = BudgetState(
+            model_calls=int(snapshot.get("model_calls", 0)),
+            tool_calls=int(snapshot.get("tool_calls", 0)),
+            mutates=int(snapshot.get("mutates", 0)),
+            program_tool_calls=int(snapshot.get("program_tool_calls", 0)),
+        )
+
+    def snapshot(self) -> dict[str, int]:
+        return {
+            "model_calls": self.state.model_calls,
+            "tool_calls": self.state.tool_calls,
+            "mutates": self.state.mutates,
+            "program_tool_calls": self.state.program_tool_calls,
+        }
+
+    def reserve_tools(self, n: int) -> None:
+        """Hold tool budget before fan-out so concurrent roles cannot overspend."""
+        hold = max(0, int(n))
+        if hold == 0:
+            return
+        if self.state.tool_calls + hold > self.budget.max_tool_calls:
+            raise BudgetExceeded("tool_calls")
+        self.state.tool_calls += hold

@@ -304,7 +304,9 @@ ingest → classify → resolve_context
 
 并发只对输入已确定的分支开放：若图表读取依赖 ContextResolver 才能确定的标的/方向，就必须等待。各分支写自己独立的 AgentResult，由 EvidenceMerger 统一合并；不让多个 worker 原地更新同一 Signal。合并按字段保留原文/图片/记忆来源，冲突转复核；独立读取失败但不影响必要证据时可继续并标记缺失，否则等待复核或结束。
 
-Native 与 LangGraph adapter 使用相同节点函数、任务、工具、预算、模拟 gateway 和 verifier。先比较顺序等价行为，再测 checkpoint/interrupt/fan-out；L5 仅替换编排表达方式，不同时换模型或角色拓扑。这里不指定未经核对的 LangGraph 方法名。
+Native 与 LangGraph adapter 使用相同节点函数、任务、工具、预算、模拟 gateway 和 verifier。先比较顺序等价行为，再测 checkpoint/interrupt/fan-out；L5 仅替换编排表达方式，不同时换模型或角色拓扑。
+
+本轮落地时固定的 LangGraph 1.2 入口：`StateGraph`、`compile(checkpointer=InMemorySaver, interrupt_before=...)`、`invoke(None, {"configurable": {"thread_id": run_id}})` 续跑、`get_state(config).next` 判断暂停点。Native checkpoint 写入 `RunStore.checkpoints`（`run_id / next_node / 节点结果`）；模拟账户仍由 `SimulationGateway` 管理。
 
 #### 1.7.8 L6–L7：人工审核与受控恢复
 
@@ -792,6 +794,12 @@ RECEIVED → CLASSIFIED → ENRICHED → RISK_APPROVED
 
 学习实验使用独立 store，避免双写污染现有 `state.json`。后续按追加事件日志生成 plans、positions 和 reconciliation 视图；是否替换业务存储在独立迁移阶段决定。
 
+### 6.5 本轮对照后的框架决策
+
+线性教学路径（classify → resolve → 只读 fan_out → risk → merge → commit）继续用 native FSM：代码短，checkpoint 在 SQLite，测试可换 adapter 实例恢复。LangGraph 用于同一拓扑的对照，以及后续真正需要 interrupt/长流程的冷路径；它省去手写暂停循环，但不保存账户，节点失败后会重跑。提交 exactly-once 由 `SimulationGateway` receipt 保证，不由 graph checkpoint 保证。跨 backend 对照必须复制初始快照，禁止两条 workflow 改同一账户。
+
+真实入口：`src/lab/workflows/nodes.py` 共用节点，`native.py` / `langgraph.py` 两套 adapter，`make_workflow_adapter(backend)` 切换。
+
 
 <a id="l6"></a>
 
@@ -1243,7 +1251,7 @@ Critic 依据证据和 schema 排序候选计划，优先实验无搜索、少�
 
 ### 13.1 当前 L0–L7 的目录规划
 
-本阶段统一放在 `src/lab/`，保留现有 `src/engine.py` 等业务入口。此前按全系统列出的 `src/evals/`、`src/memory/` 等逻辑模块，本阶段分别落在 `src/lab/evals/`、`src/lab/memory/`，不同时维护两套。以下文件均为拟议位置，本次未创建代码目录。
+本阶段统一放在 `src/lab/`，保留现有 `src/engine.py` 等业务入口。此前按全系统列出的 `src/evals/`、`src/memory/` 等逻辑模块，本阶段分别落在 `src/lab/evals/`、`src/lab/memory/`，不同时维护两套。以下文件均为拟议位置；F0–F5 已按该目录落地 `evals/`、`harness/`、`agents/`、`workflows/` 等，其余仍按批次创建。
 
 ```text
 src/
@@ -1382,12 +1390,12 @@ outputs:
 - [ ] H2：完成两个模型 × 两种观察的四组消融。
 - [ ] H3：完成沙箱程序批量模拟、单次提交与失败恢复。
 - [ ] L2–L3：实际触发模型压缩，完成记忆与 Skills 三组对照及加载校验。
-- [ ] L4–L5：完成多 agent 并发和 LangGraph 对照。
+- [x] L4–L5：完成多 agent 并发和 LangGraph 对照。
 - [ ] L6–L7：完成隔离、故障恢复与人工复核实验。
 - [ ] L9–L10：完成 SFT/RL 小闭环与 rollout 系统实验。
 - [ ] 选做 L8 / L11，并完成结业报告。
 
-当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。本次只补充设计文档，所有实验结果仍为待测。资料链接保留在对应知识点旁；框架版本、GPU、预算和模型尚未选定，实施时再核对与固定。
+当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。F0–F5 已有代码与测试；F6–F7 尚未实施。资料链接保留在对应知识点旁。
 
 <a id="milestones"></a>
 

@@ -44,6 +44,7 @@ class RunStatus(str, Enum):
     TIMED_OUT = "timed_out"
     CANCELLED = "cancelled"
     REJECTED = "rejected"
+    INTERRUPTED = "interrupted"
 
 
 class ToolStatus(str, Enum):
@@ -233,6 +234,73 @@ class MemoryRecord:
             "status": self.status.value,
             "supersedes": self.supersedes,
         }
+
+
+@dataclass(frozen=True)
+class RoleOutput:
+    """One role's independent result. Workers must not mutate a shared Signal."""
+
+    role: str
+    status: str
+    fields: dict[str, Any] = field(default_factory=dict)
+    evidence_refs: tuple[str, ...] = ()
+    conflicts: tuple[str, ...] = ()
+    missing_fields: tuple[str, ...] = ()
+    latency_ms: float = 0.0
+    error_code: Optional[str] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "role": self.role,
+            "status": self.status,
+            "fields": dict(self.fields),
+            "evidence_refs": list(self.evidence_refs),
+            "conflicts": list(self.conflicts),
+            "missing_fields": list(self.missing_fields),
+            "latency_ms": self.latency_ms,
+            "error_code": self.error_code,
+        }
+
+
+def role_output_from_dict(raw: dict[str, Any]) -> RoleOutput:
+    return RoleOutput(
+        role=str(raw["role"]),
+        status=str(raw["status"]),
+        fields=dict(raw.get("fields") or {}),
+        evidence_refs=tuple(raw.get("evidence_refs") or ()),
+        conflicts=tuple(raw.get("conflicts") or ()),
+        missing_fields=tuple(raw.get("missing_fields") or ()),
+        latency_ms=float(raw.get("latency_ms") or 0.0),
+        error_code=raw.get("error_code"),
+    )
+
+
+@dataclass(frozen=True)
+class MergedEvidence:
+    kind: DecisionKind
+    referenced_plan_id: Optional[str]
+    proposed_changes: dict[str, Any]
+    evidence_refs: tuple[str, ...]
+    conflicts: tuple[str, ...]
+    missing_fields: tuple[str, ...]
+    field_sources: dict[str, Any]
+
+    def to_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["kind"] = self.kind.value
+        return d
+
+
+def merged_from_dict(raw: dict[str, Any]) -> MergedEvidence:
+    return MergedEvidence(
+        kind=DecisionKind(raw["kind"]),
+        referenced_plan_id=raw.get("referenced_plan_id"),
+        proposed_changes=dict(raw.get("proposed_changes") or {}),
+        evidence_refs=tuple(raw.get("evidence_refs") or ()),
+        conflicts=tuple(raw.get("conflicts") or ()),
+        missing_fields=tuple(raw.get("missing_fields") or ()),
+        field_sources=dict(raw.get("field_sources") or {}),
+    )
 
 
 @dataclass(frozen=True)
@@ -431,3 +499,33 @@ def decision_from_dict(raw: dict[str, Any]) -> SubmittedDecision:
         claimed_success=bool(raw.get("claimed_success", False)),
         expected_state_version=raw.get("expected_state_version"),
     )
+
+
+@dataclass
+class WorkflowCheckpoint:
+    """Workflow resume pointer. Does not store SimulationGateway account state."""
+
+    run_id: str
+    task_id: str
+    next_node: str
+    status: str
+    state: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "task_id": self.task_id,
+            "next_node": self.next_node,
+            "status": self.status,
+            "state": dict(self.state),
+        }
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> WorkflowCheckpoint:
+        return cls(
+            run_id=str(raw["run_id"]),
+            task_id=str(raw["task_id"]),
+            next_node=str(raw["next_node"]),
+            status=str(raw["status"]),
+            state=dict(raw.get("state") or {}),
+        )

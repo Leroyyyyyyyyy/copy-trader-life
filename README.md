@@ -8,7 +8,7 @@
 - **接手实施**：[handoff.md](handoff.md)，包含真实状态、下一批工作与可复制提示。
 - README 维护入口与运行说明，handoff 维护进度，手册维护设计与验收；不复制成三份架构。
 
-## 当前状态（2026-09-15）
+## 当前状态（2026-09-19）
 
 | 部分 | 状态 |
 |---|---|
@@ -20,14 +20,16 @@
 | L3：SQLite memory、SkillRegistry、按需加载 | 已实现（F2 收口） |
 | H2：两 stub 模型 × 两种观察的 2×2 | 已实现（协议 stub，非真实 LLM） |
 | H3：Docker SandboxExecutor、程序模拟后单次提交 | 已实现；无 daemon 时 `run_program` 禁用 |
-| 当前接手起点 | F4：L4 多 agent / 并发 |
+| L4：多角色编排、只读 fan-out、证据汇合 | 已实现（确定性角色；非 LangGraph） |
+| L5：native / LangGraph WorkflowAdapter 对照 | 已实现；共用节点，checkpoint 不含账户 |
+| 当前接手起点 | F6：L6 隔离、故障注入与结构化 trace |
 | 当前终点 | F7 / L7：人工审核、恢复和完整批量 eval |
 | L8–L11、SFT/RL、推理集群与模型发布 | 后续资料，不属于本次实施 |
 
-F0–H3 实测：
+F0–F5 实测：
 
 ```bash
-.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox -v
+.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows -v
 ```
 
 历史 testnet 记录见 handoff，不代表当前交易环境已验证。
@@ -36,7 +38,7 @@ F0–H3 实测：
 
 按手册 F0–F7 分批交付可运行增量，在 `src/lab/` 建立独立模拟实验框架，保留原有业务入口。每批提供真实检查结果、关键路径讲解、trace 与本人理解练习；代码通过和本人已掌握分别记录。
 
-初期使用 stub 模型、SQLite/文件、只读或模拟工具；L5 才加入 LangGraph 对照，L7 先用 CLI 复核。H1/H2/H3、压缩、记忆与 Skills 实验都在手册中。Lab 的命令与依赖尚未实现，手册配置不是可运行 CLI。
+初期使用 stub 模型、SQLite/文件、只读或模拟工具；L4 用原生编排对照串行/并发，L5 用同一节点函数对照 native FSM 与 LangGraph。L7 先用 CLI 复核。H1/H2/H3、压缩、记忆与 Skills 实验都在手册中。Lab 的命令与依赖尚未做成独立 CLI，手册配置不是可运行入口。
 
 评测选型：**DeepEval + 项目确定性 verifier**，详见手册 [2.3 节](docs/agent_architecture_v2.md#deepeval)。F0 已实现离线确定性 verifier；DeepEval 适配器仍待 harness 稳定后接入。
 
@@ -66,18 +68,18 @@ python -m unittest tests.test_parser tests.test_risk -v
 
 解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。
 
-Lab F0–H3（离线，不改 `data/state.json`）：
+Lab F0–F5（离线，不改 `data/state.json`）：
 
 ```bash
 source .venv/bin/activate   # macOS 若无 python，用 .venv/bin/python
-python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox -v
+python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows -v
 python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
 python -m src.lab.experiments.h2_observation
 ```
 
-H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。
+H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。L5 的 LangGraph adapter 需要 `langgraph`（见 `requirements.txt`）；native adapter 不依赖它。
 
-观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。
+观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。
 
 ## 现有纸交易入口（非新 lab）
 

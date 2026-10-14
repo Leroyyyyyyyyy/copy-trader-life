@@ -45,6 +45,12 @@ class RunStore:
               payload_hash TEXT NOT NULL,
               receipt_json TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS checkpoints (
+              run_id TEXT PRIMARY KEY,
+              next_node TEXT NOT NULL,
+              status TEXT NOT NULL,
+              payload_json TEXT NOT NULL
+            );
             """
         )
         self._conn.commit()
@@ -133,3 +139,31 @@ class RunStore:
             ),
         )
         self._conn.commit()
+
+    def put_checkpoint(self, *, run_id: str, payload: dict[str, Any]) -> None:
+        self._conn.execute(
+            """
+            INSERT INTO checkpoints(run_id, next_node, status, payload_json)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(run_id) DO UPDATE SET
+              next_node=excluded.next_node,
+              status=excluded.status,
+              payload_json=excluded.payload_json
+            """,
+            (
+                run_id,
+                str(payload.get("next_node") or ""),
+                str(payload.get("status") or ""),
+                json.dumps(payload),
+            ),
+        )
+        self._conn.commit()
+
+    def get_checkpoint(self, run_id: str) -> Optional[dict[str, Any]]:
+        row = self._conn.execute(
+            "SELECT payload_json FROM checkpoints WHERE run_id=?",
+            (run_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return json.loads(row["payload_json"])
