@@ -8,7 +8,7 @@
 - **接手实施**：[handoff.md](handoff.md)，包含真实状态、下一批工作与可复制提示。
 - README 维护入口与运行说明，handoff 维护进度，手册维护设计与验收；不复制成三份架构。
 
-## 当前状态（2026-09-19）
+## 当前状态（2026-10-14）
 
 | 部分 | 状态 |
 |---|---|
@@ -22,14 +22,15 @@
 | H3：Docker SandboxExecutor、程序模拟后单次提交 | 已实现；无 daemon 时 `run_program` 禁用 |
 | L4：多角色编排、只读 fan-out、证据汇合 | 已实现（确定性角色；非 LangGraph） |
 | L5：native / LangGraph WorkflowAdapter 对照 | 已实现；共用节点，checkpoint 不含账户 |
-| 当前接手起点 | F6：L6 隔离、故障注入与结构化 trace |
+| L6：故障集、权限/风控闸门、取消与超时、结构化 trace | 已实现；DeepSeek 用于对抗输入对照，故障注入用确定性脚本模型 |
+| 当前接手起点 | F7：L7 人工复核、受控恢复与完整批量 eval |
 | 当前终点 | F7 / L7：人工审核、恢复和完整批量 eval |
 | L8–L11、SFT/RL、推理集群与模型发布 | 后续资料，不属于本次实施 |
 
-F0–F5 实测：
+F0–F6 实测：
 
 ```bash
-.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows -v
+.venv/bin/python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults -v
 ```
 
 历史 testnet 记录见 handoff，不代表当前交易环境已验证。
@@ -68,18 +69,27 @@ python -m unittest tests.test_parser tests.test_risk -v
 
 解析/风控单测不需要 Telegram 登录或交易凭证。现有全量命令为 `python -m unittest discover -s tests -v`；先检查当前测试的 mock/存储隔离，再执行并记录实测结果。
 
-Lab F0–F5（离线，不改 `data/state.json`）：
+Lab F0–F6（离线，不改 `data/state.json`）：
 
 ```bash
 source .venv/bin/activate   # macOS 若无 python，用 .venv/bin/python
-python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows -v
+python -m unittest tests.lab.test_f0_verifier tests.lab.test_f1_harness tests.lab.test_l2_context tests.lab.test_l3_memory_skills tests.lab.test_h2_observation tests.lab.test_h3_sandbox tests.lab.test_l4_roles tests.lab.test_l5_workflows tests.lab.test_l6_faults -v
 python -m src.lab.evals.runner experiments/fixtures/handwritten/tl_f0_move_sl_plan_a_correct.json
 python -m src.lab.experiments.h2_observation
+python -m src.lab.experiments.f6_faults --part all --model stub
 ```
+
+F6 真实模型对照（会调用 DeepSeek API 并产生费用）：
+
+```bash
+python -m src.lab.experiments.f6_faults --part all --model deepseek --repeats 3 --out experiments/reports/f6_deepseek.json
+```
+
+Lab 的 DeepSeek 适配器（`src/lab/models/provider.py`）只从 `.env` 读取 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、可选 `DEEPSEEK_LAB_MODEL`（默认 `deepseek-flash`）三行，不把整份 `.env` 载入进程环境。
 
 H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。L5 的 LangGraph adapter 需要 `langgraph`（见 `requirements.txt`）；native adapter 不依赖它。
 
-观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。
+观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。L6 闸门在 `src/lab/tools/policy.py`，trace 脱敏/归因在 `src/lab/observability/`，取消与事件去重在 `src/lab/runtime/cancel.py`、`inbox.py`，故障集与对照在 `src/lab/experiments/f6_faults.py`，报告写入 `experiments/reports/`。
 
 ## 现有纸交易入口（非新 lab）
 

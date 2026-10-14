@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import threading
+import time
 import uuid
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Optional
 
 from src.lab.context.builder import ContextBudgetError, ContextBuilder, estimate_tokens
@@ -23,11 +27,14 @@ from src.lab.domain import (
 )
 from src.lab.execution.simulation import SimulationGateway
 from src.lab.memory.store import LabelInMemoryError, MemoryStore, memories_for_prompt
-from src.lab.models.base import ModelAdapter
+from src.lab.models.base import ModelAdapter, ModelCallError
+from src.lab.observability.events import Redactor
 from src.lab.runtime.budget import BudgetExceeded, BudgetTracker
+from src.lab.runtime.cancel import CancelToken
 from src.lab.runtime.store import RunStore
 from src.lab.skills.registry import SkillRegistry
 from src.lab.tools.dispatcher import ToolDispatcher
+from src.lab.tools.policy import ToolPolicy
 from src.lab.tools.registry import ToolSpec
 
 
@@ -44,8 +51,14 @@ class AgentHarness:
         memory: MemoryStore | None = None,
         skills: SkillRegistry | None = None,
         skill_mode: str = "none",
+        policy: ToolPolicy | None = None,
+        cancel_token: CancelToken | None = None,
+        model_timeout_sec: float | None = None,
     ):
         self.store = store
+        self.policy = policy
+        self.cancel_token = cancel_token
+        self.model_timeout_sec = model_timeout_sec
         self.model = model
         self.environment = environment
         self.budget = BudgetTracker(budget or RunBudget())
@@ -140,38 +153,92 @@ class AgentHarness:
         hits = self.memory.retrieve(visible_at=task.visible_at, include_overlay=True)
         return memories_for_prompt(hits)
 
-    def run(self, task: TaskSpec, *, run_id: Optional[str] = None) -> AgentResult:
+    def run(
+        self,
+        task: TaskSpec,
+        *,
+        run_id: Optional[str] = None,
+        trace_id: Optional[str] = None,
+    ) -> AgentResult:
         run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
+        trace_id = trace_id or f"trace_{uuid.uuid4().hex[:16]}"
+        # `events` is the model's working history (raw). `trace_events` is the
+        # redacted copy that is persisted and returned for audit.
         events: list[dict[str, Any]] = []
+        trace_events: list[dict[str, Any]] = []
         observations: list[dict[str, Any]] = []
         usage = Usage()
         claimed_done_without_submit = False
         compaction_records: list[CompactionRecord] = []
         seq = 0
+        lock = threading.Lock()
+        t0 = time.perf_counter()
+        redactor = self._redactor()
+        workers = _ModelWorkers()
 
-        def emit(kind: str, payload: dict[str, Any]) -> None:
+        def emit(kind: str, payload: dict[str, Any], actor: str = "harness") -> None:
             nonlocal seq
-            seq += 1
-            event = {"seq": seq, "kind": kind, "payload": payload}
-            events.append(event)
-            self.store.append_event(run_id, seq, kind, payload)
+            with lock:
+                seq += 1
+                t_ms = round((time.perf_counter() - t0) * 1000.0, 3)
+                events.append({"seq": seq, "kind": kind, "payload": payload})
+                clean, hits = redactor.redact(payload)
+                if hits:
+                    clean["_redactions"] = hits
+                trace_events.append(
+                    {
+                        "seq": seq,
+                        "kind": kind,
+                        "payload": clean,
+                        "trace_id": trace_id,
+                        "run_id": run_id,
+                        "t_ms": t_ms,
+                        "actor": actor,
+                    }
+                )
+                self.store.append_event(
+                    run_id, seq, kind, clean, trace_id=trace_id, t_ms=t_ms, actor=actor
+                )
 
         self.store.upsert_run(
             run_id=run_id,
             task_id=task.task_id,
             status=RunStatus.RUNNING.value,
             terminal_reason=None,
-            payload={"task_id": task.task_id},
+            payload={"task_id": task.task_id, "trace_id": trace_id},
         )
         self._loaded_skill_names = set()
         self.dispatcher = ToolDispatcher(self._tool_registry(), self.environment)
-        emit("run_started", {"task_id": task.task_id})
+        emit(
+            "run_started",
+            {
+                "task_id": task.task_id,
+                "policy": None
+                if self.policy is None
+                else {"mode": self.policy.mode, "version": self.policy.version},
+                "model": getattr(self.model, "version", type(self.model).__name__),
+                "model_timeout_sec": self.model_timeout_sec,
+            },
+        )
 
         terminal_reason = "succeeded"
         status = RunStatus.SUCCEEDED
+        fence_record: Optional[dict[str, Any]] = None
+        model_call_n = 0
+
+        def stop_for_cancel(where: dict[str, Any]) -> None:
+            nonlocal status, terminal_reason, fence_record
+            reason = self.cancel_token.reason if self.cancel_token else "cancelled"
+            emit("cancel_observed", {"reason": reason, **where}, actor="operator")
+            fence_record = fence_record or self._fence(f"cancelled:{reason}")
+            status = RunStatus.CANCELLED
+            terminal_reason = f"cancelled:{reason}"
 
         try:
             while True:
+                if self.cancel_token is not None and self.cancel_token.is_set():
+                    stop_for_cancel({"before": "model_call"})
+                    break
                 try:
                     self.budget.record_model()
                 except BudgetExceeded as exc:
@@ -215,7 +282,42 @@ class AgentHarness:
                 active_tokens = estimate_tokens(
                     request, self.context.config.chars_per_token
                 )
-                turn, turn_usage = self.model.generate(request)
+                model_call_n += 1
+                emit("model_call_started", {"model_call": model_call_n}, actor="harness")
+                try:
+                    turn, turn_usage = self._invoke_model(request, workers)
+                except _Abandoned as ab:
+                    emit(
+                        "model_call_abandoned",
+                        {
+                            "model_call": model_call_n,
+                            "reason": ab.reason,
+                            "still_running": not ab.future.done(),
+                        },
+                    )
+                    fence_record = fence_record or self._fence(ab.reason)
+                    workers.abandon(ab.future, self._late_callback(emit, ab.reason, model_call_n))
+                    if ab.reason == "cancelled":
+                        stop_for_cancel({"during": "model_call", "model_call": model_call_n})
+                    else:
+                        status = RunStatus.TIMED_OUT
+                        terminal_reason = "model_timeout"
+                    break
+                except ModelCallError as exc:
+                    emit(
+                        "model_error",
+                        {
+                            "model_call": model_call_n,
+                            "code": exc.code,
+                            "retryable": exc.retryable,
+                            "attempts": exc.attempts,
+                            "detail": exc.detail,
+                        },
+                        actor="model_provider",
+                    )
+                    status = RunStatus.FAILED
+                    terminal_reason = f"model_error:{exc.code}"
+                    break
                 usage = Usage(
                     model_calls=usage.model_calls + turn_usage.model_calls,
                     tool_calls=usage.tool_calls,
@@ -234,6 +336,7 @@ class AgentHarness:
                         "active_tokens": active_tokens,
                         "manifest": request.get("manifest"),
                     },
+                    actor="model",
                 )
 
                 if turn.parse_error:
@@ -249,6 +352,10 @@ class AgentHarness:
                 if turn.tool_calls:
                     mutate_used = False
                     for call in turn.tool_calls:
+                        if self.cancel_token is not None and self.cancel_token.is_set():
+                            # Check right before a possible side effect.
+                            stop_for_cancel({"before_tool": call.name, "call_id": call.call_id})
+                            raise StopIteration
                         try:
                             # Pre-check tool budget; mutate checked after we know mutating.
                             self.budget.check_tool()
@@ -258,8 +365,11 @@ class AgentHarness:
                             emit("budget_exceeded", {"kind": exc.kind})
                             raise StopIteration from exc
 
-                        mutate_allowed = not mutate_used
-                        result = self.dispatcher.execute(call, mutate_allowed=mutate_allowed)
+                        emit(
+                            "tool_call_started",
+                            {"tool": call.name, "call_id": call.call_id},
+                        )
+                        result, actor = self._dispatch(call, not mutate_used, emit)
                         mutated = bool(result.mutated and result.status == ToolStatus.OK)
                         expanded = int(result.expanded_calls or 0)
                         try:
@@ -267,7 +377,7 @@ class AgentHarness:
                         except BudgetExceeded as exc:
                             # Tool already executed; still record observation then stop.
                             observations.append(result.to_observation())
-                            emit("tool_result", result.to_observation())
+                            emit("tool_result", result.to_observation(), actor=actor)
                             usage = Usage(
                                 model_calls=usage.model_calls,
                                 tool_calls=usage.tool_calls + 1 + expanded,
@@ -294,7 +404,7 @@ class AgentHarness:
                             program_tool_calls=usage.program_tool_calls + expanded,
                         )
                         observations.append(result.to_observation())
-                        emit("tool_result", result.to_observation())
+                        emit("tool_result", result.to_observation(), actor=actor)
                     continue
 
                 if turn.final is not None:
@@ -304,7 +414,7 @@ class AgentHarness:
                     if "kind" in final and self.environment.last_decision() is None:
                         # Allow final structured decision without tool only as a claim.
                         claimed_done_without_submit = True
-                    emit("final", final)
+                    emit("final", final, actor="model")
                     terminal_reason = "final_output"
                     status = RunStatus.SUCCEEDED
                     break
@@ -318,6 +428,8 @@ class AgentHarness:
             status = RunStatus.FAILED
             emit("run_failed", {"error": str(exc)})
 
+        emit("resource_cleanup", {"items": self._cleanup(workers, fence_record)})
+
         decision = self.environment.last_decision()
         if decision is None and claimed_done_without_submit:
             # Preserve verbal claim for verifier.
@@ -329,6 +441,7 @@ class AgentHarness:
                 claimed_success=True,
             )
 
+        emit("run_finished", {"status": status.value, "terminal_reason": terminal_reason})
         result = AgentResult(
             run_id=run_id,
             task_id=task.task_id,
@@ -337,9 +450,10 @@ class AgentHarness:
             decision=decision,
             final_snapshot=self.environment.final_snapshot(),
             usage=usage,
-            events=events,
+            events=trace_events,
             claimed_done_without_submit=claimed_done_without_submit,
             compaction_records=compaction_records,
+            trace_id=trace_id,
         )
         self.store.upsert_run(
             run_id=run_id,
@@ -348,8 +462,142 @@ class AgentHarness:
             terminal_reason=terminal_reason,
             payload=result.to_dict(),
         )
-        emit("run_finished", {"status": status.value, "terminal_reason": terminal_reason})
         return result
+
+    # --- L6 helpers ----------------------------------------------------------
+
+    def _redactor(self) -> Redactor:
+        redactor = Redactor()
+        values = getattr(self.model, "redaction_values", None)
+        if callable(values):
+            for v in values():
+                redactor.add(v)
+        credential = getattr(self.environment, "credential", None)
+        if credential is not None:
+            redactor.add(credential.api_secret)
+        return redactor
+
+    def _invoke_model(self, request: dict[str, Any], workers: "_ModelWorkers"):
+        if self.cancel_token is None and self.model_timeout_sec is None:
+            return self.model.generate(request)
+        future = workers.submit(self.model.generate, request)
+        deadline = (
+            None
+            if self.model_timeout_sec is None
+            else time.monotonic() + self.model_timeout_sec
+        )
+        while True:
+            try:
+                return future.result(timeout=0.01)
+            except FuturesTimeout:
+                pass
+            if self.cancel_token is not None and self.cancel_token.is_set():
+                raise _Abandoned("cancelled", future)
+            if deadline is not None and time.monotonic() >= deadline:
+                raise _Abandoned("model_timeout", future)
+
+    def _late_callback(self, emit, reason: str, model_call: int):
+        def on_done(future: Future) -> None:
+            if future.cancelled():
+                payload: dict[str, Any] = {"never_started": True}
+            else:
+                try:
+                    turn, _ = future.result()
+                    payload = {
+                        "had_tool_calls": bool(turn.tool_calls),
+                        "tool_names": [c.name for c in turn.tool_calls],
+                        "had_final": turn.final is not None,
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    payload = {"error": type(exc).__name__}
+            try:
+                emit(
+                    "late_result_discarded",
+                    {"model_call": model_call, "reason": reason, "dispatched": False, **payload},
+                )
+            except Exception:  # noqa: BLE001 - store may already be closed
+                pass
+
+        return on_done
+
+    def _fence(self, reason: str) -> Optional[dict[str, Any]]:
+        fence = getattr(self.environment, "fence", None)
+        if callable(fence):
+            return fence(reason)
+        return None
+
+    def _dispatch(self, call, mutate_allowed: bool, emit) -> tuple[ToolResult, str]:
+        actor = f"tool:{call.name}"
+        if self.policy is not None:
+            violations = self.policy.check(call)
+            if violations:
+                blocked = self.policy.mode == "enforce"
+                emit(
+                    "policy_violation",
+                    {
+                        "call_id": call.call_id,
+                        "tool": call.name,
+                        "arguments": call.arguments,
+                        "violations": [v.to_dict() for v in violations],
+                        "mode": self.policy.mode,
+                        "blocked": blocked,
+                        "policy_version": self.policy.version,
+                    },
+                    actor="gate",
+                )
+                if blocked:
+                    return self.policy.blocked_result(call, violations), "gate"
+        return self.dispatcher.execute(call, mutate_allowed=mutate_allowed), actor
+
+    def _cleanup(
+        self, workers: "_ModelWorkers", fence_record: Optional[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        items = workers.shutdown()
+        if fence_record is not None:
+            items.append(fence_record)
+        env_cleanup = getattr(self.environment, "cleanup", None)
+        if callable(env_cleanup):
+            items.extend(env_cleanup())
+        return items
+
+
+class _Abandoned(Exception):
+    def __init__(self, reason: str, future: Future):
+        self.reason = reason
+        self.future = future
+        super().__init__(reason)
+
+
+class _ModelWorkers:
+    """Lazily created worker for model calls that must be cancellable."""
+
+    def __init__(self) -> None:
+        self._pool: Optional[ThreadPoolExecutor] = None
+        self.abandoned: list[Future] = []
+
+    def submit(self, fn, *args):
+        if self._pool is None:
+            self._pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="lab-model")
+        return self._pool.submit(fn, *args)
+
+    def abandon(self, future: Future, callback) -> None:
+        self.abandoned.append(future)
+        future.add_done_callback(callback)
+
+    def shutdown(self) -> list[dict[str, Any]]:
+        if self._pool is None:
+            return []
+        # Python threads cannot be killed: an in-flight provider call keeps
+        # running until its own HTTP timeout. We stop waiting and record that.
+        self._pool.shutdown(wait=False, cancel_futures=True)
+        return [
+            {
+                "resource": "model_worker",
+                "action": "shutdown(wait=False, cancel_futures=True)",
+                "abandoned_calls": len(self.abandoned),
+                "still_running": sum(1 for f in self.abandoned if not f.done()),
+            }
+        ]
 
 
 def make_gateway(store: RunStore) -> SimulationGateway:

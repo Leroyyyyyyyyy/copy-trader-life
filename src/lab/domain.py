@@ -464,10 +464,12 @@ class AgentResult:
     events: list[dict[str, Any]] = field(default_factory=list)
     claimed_done_without_submit: bool = False
     compaction_records: list[CompactionRecord] = field(default_factory=list)
+    trace_id: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
+            "trace_id": self.trace_id,
             "task_id": self.task_id,
             "status": self.status.value,
             "terminal_reason": self.terminal_reason,

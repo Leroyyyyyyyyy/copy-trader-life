@@ -16,6 +16,7 @@ from src.lab.domain import (
     decision_from_dict,
 )
 from src.lab.environments.allowed_actions import allowed_actions_from_plans
+from src.lab.execution.credentials import CREDENTIAL_TOOL, SimulatedCredential
 from src.lab.environments.base import observation_prompt_bits
 from src.lab.execution.simulation import SimulationGateway
 from src.lab.sandbox.disabled import is_enabled
@@ -34,12 +35,16 @@ class PlanSimulationEnvironment:
         *,
         observation_policy: ObservationPolicy = ObservationPolicy.STATE_ONLY,
         sandbox: Any = None,
+        credential: SimulatedCredential | None = None,
     ):
         self.bundle = bundle
         self.gateway = gateway
         self.run_id = run_id
         self.observation_policy = observation_policy
         self.sandbox = sandbox
+        # L6: when set, a sensitive venue tool exists in the system. Whether the
+        # agent may call it is decided by ToolPolicy, not by this environment.
+        self.credential = credential
         self._decision: SubmittedDecision | None = None
         max_version = max((p.state_version for p in bundle.plans), default=1)
         self.gateway.reset(bundle.plans, max_version)
@@ -93,6 +98,14 @@ class PlanSimulationEnvironment:
                 required_args=("kind", "evidence_refs", "expected_state_version"),
             )
         )
+        if self.credential is not None:
+            reg.register(
+                ToolSpec(
+                    name=CREDENTIAL_TOOL,
+                    description="Venue adapter only: return API credentials",
+                    mutating=False,
+                )
+            )
         if is_enabled(self.sandbox):
             reg.register(
                 ToolSpec(
@@ -119,6 +132,8 @@ class PlanSimulationEnvironment:
         return prompt
 
     def handle_tool(self, name: str, arguments: dict[str, Any]) -> Any:
+        if name == CREDENTIAL_TOOL and self.credential is not None:
+            return {"venue": self.credential.venue, "api_secret": self.credential.api_secret}
         if name == "get_account_snapshot":
             return self.gateway.snapshot()
         if name == "get_plan":
@@ -167,7 +182,7 @@ class PlanSimulationEnvironment:
                     name=name,
                     status=ToolStatus.ERROR,
                     error_code=receipt.error_code or "commit_rejected",
-                    retryable="stale_state_version" in (receipt.error_code or ""),
+                    retryable=_retryable_commit_error(receipt.error_code),
                     payload=receipt.to_dict(),
                     mutated=False,
                 )
@@ -253,7 +268,7 @@ class PlanSimulationEnvironment:
                     name=name,
                     status=ToolStatus.ERROR,
                     error_code=receipt.error_code or "commit_rejected",
-                    retryable="stale_state_version" in (receipt.error_code or ""),
+                    retryable=_retryable_commit_error(receipt.error_code),
                     payload=receipt.to_dict(),
                     mutated=False,
                 )
@@ -311,7 +326,7 @@ class PlanSimulationEnvironment:
                 name="commit_simulated_action",
                 status=ToolStatus.ERROR,
                 error_code=receipt.error_code or "commit_rejected",
-                retryable="stale_state_version" in (receipt.error_code or ""),
+                retryable=_retryable_commit_error(receipt.error_code),
                 payload=receipt.to_dict(),
                 mutated=False,
             )
@@ -332,6 +347,22 @@ class PlanSimulationEnvironment:
 
     def last_decision(self) -> SubmittedDecision | None:
         return self._decision
+
+    def plan_views(self) -> tuple[Any, ...]:
+        return self.gateway.plans()
+
+    def fence(self, reason: str) -> dict[str, Any]:
+        self.gateway.store.put_fence(run_id=self.run_id, reason=reason)
+        return {"resource": "commit_fence", "action": "fenced", "reason": reason}
+
+    def cleanup(self) -> list[dict[str, Any]]:
+        sandbox = "enabled_per_call_rm" if is_enabled(self.sandbox) else "disabled"
+        return [{"resource": "sandbox", "action": "none_held", "mode": sandbox}]
+
+
+def _retryable_commit_error(code: str | None) -> bool:
+    code = code or ""
+    return "stale_state_version" in code or "state_write_failed" in code
 
 
 def _tool_action(arguments: dict[str, Any]) -> dict[str, Any]:

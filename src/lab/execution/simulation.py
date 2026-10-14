@@ -65,20 +65,29 @@ class SimulationGateway:
     ) -> CommitReceipt:
         key = f"{run_id}:{decision_id}:{decision_version}"
         digest = _payload_hash(decision)
+
+        def rejected(error_code: str) -> CommitReceipt:
+            return CommitReceipt(
+                run_id=run_id,
+                decision_id=decision_id,
+                decision_version=decision_version,
+                idempotency_key=key,
+                applied=False,
+                state_version=self._state_version,
+                payload_hash=digest,
+                reused=False,
+                error_code=error_code,
+            )
+
+        fence = self.store.get_fence(run_id)
+        if fence is not None:
+            # Cancelled/timed-out runs: a late model result must not land a commit.
+            return rejected(f"run_fenced:{fence}")
+
         existing = self.store.get_commit(key)
         if existing is not None:
             if existing["payload_hash"] != digest:
-                return CommitReceipt(
-                    run_id=run_id,
-                    decision_id=decision_id,
-                    decision_version=decision_version,
-                    idempotency_key=key,
-                    applied=False,
-                    state_version=self._state_version,
-                    payload_hash=digest,
-                    reused=False,
-                    error_code="idempotency_payload_mismatch",
-                )
+                return rejected("idempotency_payload_mismatch")
             receipt = CommitReceipt(**existing["receipt"])
             return replace(receipt, reused=True)
 
@@ -94,41 +103,22 @@ class SimulationGateway:
             current_state_version=self._state_version,
         )
         if errors:
-            return CommitReceipt(
-                run_id=run_id,
-                decision_id=decision_id,
-                decision_version=decision_version,
-                idempotency_key=key,
-                applied=False,
-                state_version=self._state_version,
-                payload_hash=digest,
-                error_code=";".join(errors),
-            )
+            return rejected(";".join(errors))
 
+        # Compute the next account state without applying it yet.
+        next_plans = dict(self._plans)
+        next_version = self._state_version
         if decision.kind == DecisionKind.UPDATE and decision.referenced_plan_id:
             if "stop_loss" in decision.proposed_changes:
-                plan = self._plans[decision.referenced_plan_id]
-                new_sl = float(decision.proposed_changes["stop_loss"])
-                self._state_version += 1
-                self._plans[plan.plan_id] = replace(
+                plan = next_plans[decision.referenced_plan_id]
+                next_version += 1
+                next_plans[plan.plan_id] = replace(
                     plan,
-                    stop_loss=new_sl,
-                    state_version=self._state_version,
+                    stop_loss=float(decision.proposed_changes["stop_loss"]),
+                    state_version=next_version,
                 )
-            self._submit_count += 1
-        elif decision.kind in {DecisionKind.IGNORE, DecisionKind.REVIEW, DecisionKind.ANALYZE}:
-            self._submit_count += 1
-        else:
-            return CommitReceipt(
-                run_id=run_id,
-                decision_id=decision_id,
-                decision_version=decision_version,
-                idempotency_key=key,
-                applied=False,
-                state_version=self._state_version,
-                payload_hash=digest,
-                error_code="unsupported_decision_kind",
-            )
+        elif decision.kind not in {DecisionKind.IGNORE, DecisionKind.REVIEW, DecisionKind.ANALYZE}:
+            return rejected("unsupported_decision_kind")
 
         receipt = CommitReceipt(
             run_id=run_id,
@@ -136,16 +126,24 @@ class SimulationGateway:
             decision_version=decision_version,
             idempotency_key=key,
             applied=True,
-            state_version=self._state_version,
+            state_version=next_version,
             payload_hash=digest,
             reused=False,
         )
-        self.store.put_commit(
-            idempotency_key=key,
-            run_id=run_id,
-            decision_id=decision_id,
-            decision_version=decision_version,
-            payload_hash=digest,
-            receipt=receipt.to_dict(),
-        )
+        # L6: persist the receipt before applying. If the write fails, nothing is
+        # applied, so a retry cannot double-apply a mutation whose receipt was lost.
+        try:
+            self.store.put_commit(
+                idempotency_key=key,
+                run_id=run_id,
+                decision_id=decision_id,
+                decision_version=decision_version,
+                payload_hash=digest,
+                receipt=receipt.to_dict(),
+            )
+        except Exception as exc:  # noqa: BLE001 - surfaced as a retryable commit error
+            return rejected(f"state_write_failed:{type(exc).__name__}")
+        self._plans = next_plans
+        self._state_version = next_version
+        self._submit_count += 1
         return receipt

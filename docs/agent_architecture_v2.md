@@ -308,6 +308,8 @@ Native 与 LangGraph adapter 使用相同节点函数、任务、工具、预算
 
 本轮落地时固定的 LangGraph 1.2 入口：`StateGraph`、`compile(checkpointer=InMemorySaver, interrupt_before=...)`、`invoke(None, {"configurable": {"thread_id": run_id}})` 续跑、`get_state(config).next` 判断暂停点。Native checkpoint 写入 `RunStore.checkpoints`（`run_id / next_node / 节点结果`）；模拟账户仍由 `SimulationGateway` 管理。
 
+F6 落地时固定的 L6 入口：`AgentHarness(policy=ToolPolicy(mode="enforce"|"audit"), cancel_token=CancelToken(), model_timeout_sec=...)`。闸门在 dispatch 前检查角色权限（`get_venue_credentials` 不对 agent 开放）与风险规则（止损只能收紧）；`audit` 模式记录同样的违规但放行，用作“纯提示约束”对照。取消/超时不杀底层调用：harness 停止等待、写 `RunStore.fences`，迟到结果只记 `late_result_discarded`，`SimulationGateway.commit` 对被 fence 的 run 返回 `run_fenced`。receipt 先落盘再改账户，写失败返回可重试的 `state_write_failed` 且不改状态。同一外部事件由 `EventInbox` 去重，避免两个 run 各自提交。每个事件带 `trace_id / t_ms / actor`，持久化前经 `Redactor` 脱敏；模型工作上下文不脱敏，因此泄漏到模型可被测量。
+
 #### 1.7.8 L6–L7：人工审核与受控恢复
 
 审核卡包含原消息、拟议操作、每个字段的来源、候选计划、冲突/缺失、模拟影响和过期时间。可见操作只有确认、拒绝、修改允许字段；不得修改预算、工具权限或隐藏标签。
@@ -1395,7 +1397,7 @@ outputs:
 - [ ] L9–L10：完成 SFT/RL 小闭环与 rollout 系统实验。
 - [ ] 选做 L8 / L11，并完成结业报告。
 
-当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。F0–F5 已有代码与测试；F6–F7 尚未实施。资料链接保留在对应知识点旁。
+当前实施从 **1.7 节 F0（L0 的任务/评分契约）** 开始，按 F0–F7 推进并停在 L7；接手前以 handoff 和实际代码核对进度。F0–F6 已有代码与测试；F7 尚未实施。资料链接保留在对应知识点旁。
 
 <a id="milestones"></a>
 
