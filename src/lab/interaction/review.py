@@ -99,6 +99,7 @@ class ReviewService:
         proposal: dict[str, Any],
         bundle: ObservationBundle,
         review_policy: str,
+        trace_id: Optional[str] = None,
     ) -> dict[str, Any]:
         fence = self.store.get_fence(run_id)
         if fence is not None:
@@ -109,6 +110,7 @@ class ReviewService:
             "card_id": f"card_{run_id}",
             "card_version": CARD_VERSION,
             "run_id": run_id,
+            "trace_id": trace_id,
             "task_id": task_id,
             "account_id": account_id,
             "review_policy": review_policy,

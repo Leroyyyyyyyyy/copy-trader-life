@@ -40,11 +40,13 @@ class SimulationGateway:
         self._plans: dict[str, PlanView] = {}
         self._state_version = 1
         self._submit_count = 0
+        self._external_changes: list[dict[str, Any]] = []
 
     def reset(self, plans: tuple[PlanView, ...] | list[PlanView], state_version: int) -> None:
         self._plans = {p.plan_id: p for p in plans}
         self._state_version = state_version
         self._submit_count = 0
+        self._external_changes = []
         if self.account_id is not None:
             self.store.put_account(self.account_id, self._account_payload())
 
@@ -58,7 +60,12 @@ class SimulationGateway:
         self._plans = {p["plan_id"]: _plan_from_dict(p) for p in raw["plans"]}
         self._state_version = int(raw["state_version"])
         self._submit_count = int(raw["submit_count"])
+        self._external_changes = list(raw.get("external_changes") or [])
         return True
+
+    @property
+    def external_changes(self) -> list[dict[str, Any]]:
+        return list(self._external_changes)
 
     def external_update(self, plan_id: str, *, stop_loss: float) -> int:
         """A change made outside this run (another operator, venue sync).
@@ -70,6 +77,10 @@ class SimulationGateway:
         plan = self._plans[plan_id]
         self._state_version += 1
         self._plans[plan_id] = replace(plan, stop_loss=float(stop_loss), state_version=self._state_version)
+        # Recorded so an evaluator can tell this change apart from the run's own.
+        self._external_changes.append(
+            {"plan_id": plan_id, "stop_loss": float(stop_loss), "state_version": self._state_version}
+        )
         if self.account_id is not None:
             self.store.put_account(self.account_id, self._account_payload())
         return self._state_version
@@ -84,6 +95,7 @@ class SimulationGateway:
             "plans": [p.to_dict() for p in (plans if plans is not None else self._plans).values()],
             "state_version": self._state_version if state_version is None else state_version,
             "submit_count": self._submit_count if submit_count is None else submit_count,
+            "external_changes": list(self._external_changes),
         }
 
     @property

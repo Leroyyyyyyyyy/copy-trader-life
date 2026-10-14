@@ -34,7 +34,9 @@
 
 ## 3. 当前进度：F0–F7 已完成，停在 L7
 
-F7 已交付：`PlanSimulationEnvironment(review_policy=...)` 在需要复核时只记录提议、不提交；`interaction/coordinator.run_task` 在 run 结束后开审核卡并把 run 标为 `waiting_review`；`interaction/review.ReviewService.respond` 按“幂等 → 卡状态/过期 → revision → 可编辑字段 → 重读账户（变了就 stale）→ 重新校验 → 经网关提交”处理人的回复；模拟账户持久化在 SQLite，回执与账户同一事务写入并做版本 compare-and-swap；`python -m src.lab.cli` 提供 run / review / account / evaluate。实测：`.venv/bin/python -m unittest discover -s tests/lab -t .`（101 lab tests 通过，3 项因无 Docker 跳过）；`python -m src.lab.cli evaluate --model deepseek`。
+F7 已交付：`PlanSimulationEnvironment(review_policy=...)` 在需要复核时只记录提议、不提交；`interaction/coordinator.run_task` 在 run 结束后开审核卡并把 run 标为 `waiting_review`；`interaction/review.ReviewService.respond` 按“幂等 → 卡状态/过期 → revision → 可编辑字段 → 重读账户（变了就 stale）→ 重新校验 → 经网关提交”处理人的回复；模拟账户持久化在 SQLite，回执与账户同一事务写入并做版本 compare-and-swap；`python -m src.lab.cli` 提供 run / review / account / evaluate。实测：`.venv/bin/python -m unittest discover -s tests/lab -t .`（102 lab tests 通过，3 项因无 Docker 跳过）；`python -m src.lab.cli evaluate --model deepseek`。
+
+端到端验证（2026-10-14）：`src/lab/experiments/e2e_cli.py` 用真实 CLI 子进程、全新数据库跑 5 个场景（歧义+外部改动、缺信息由人补、自信自动提交、凭证请求全审、注入仅歧义审），每个场景检查：事件去重拒绝重复、trace_id 由事件派生并贯穿 run 与审核卡、待审时未提交、旧批复 stale 且未执行、旧 revision 被拒、回复幂等、最多一次提交、导出 trace 无密钥、生命周期事件齐全。规则桩与 DeepSeek 各跑一次，不变量全部通过，5/5 任务判分通过（报告 `experiments/reports/e2e_deepseek_2026-10-14.json`）。原有业务单测 44 项、lab 102 项同时通过。CLI 新增 `run --event-id`、`score`、`trace`；账户记录 `external_changes`，判分时把外部改动计入基线，不误判为 run 改了非目标计划。
 
 未做（有意留下）：DeepEval 适配器与 LLM judge（手册 A2 中的可选部分；确定性 verifier 仍是主判据）；真人审核实验（目前只有模拟审核员）；网页审核界面。
 

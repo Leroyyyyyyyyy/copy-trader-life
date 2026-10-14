@@ -6,6 +6,8 @@ Examples:
   python -m src.lab.cli review show card_<run_id>
   python -m src.lab.cli review modify card_<run_id> --revision 1 --set plan_id=plan_eth_2 --set stop_loss=1900
   python -m src.lab.cli account drift --account acct_<run_id> --plan plan_eth_1 --stop-loss 1660
+  python -m src.lab.cli score <run_id>
+  python -m src.lab.cli trace <run_id>
   python -m src.lab.cli evaluate --model stub
 """
 
@@ -18,7 +20,13 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import hashlib
+
+from src.lab.evals.run_score import score_run
 from src.lab.execution.simulation import SimulationGateway
+from src.lab.observability.events import classify_run, stage_spans
+from src.lab.observability.export import export_jsonl
+from src.lab.runtime.inbox import EventInbox
 from src.lab.interaction.coordinator import run_task
 from src.lab.interaction.review import ReviewService
 from src.lab.runtime.store import RunStore
@@ -91,6 +99,18 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--model-name", default=None)
     run_p.add_argument("--review-policy", choices=("disabled", "on_ambiguity", "always"), default="on_ambiguity")
     run_p.add_argument("--run-id", default=None)
+    run_p.add_argument(
+        "--event-id", default=None,
+        help="external message id; duplicates are rejected and the run/trace ids derive from it",
+    )
+
+    sc = sub.add_parser("score", help="score a run (agent or reviewed decision) against its hidden label")
+    sc.add_argument("run_id")
+    sc.add_argument("--account", default=None)
+
+    tr = sub.add_parser("trace", help="export a run's redacted trace and summarize attribution")
+    tr.add_argument("run_id")
+    tr.add_argument("--out", type=Path, default=None)
 
     rev = sub.add_parser("review", help="list / show / answer review cards")
     rsub = rev.add_subparsers(dest="rcmd", required=True)
@@ -139,8 +159,45 @@ def main(argv: list[str] | None = None) -> int:
     store = RunStore(args.db)
     try:
         service = ReviewService(store)
+        if args.cmd == "score":
+            out = score_run(store, args.run_id, args.account)
+            _print(out)
+            return 0 if out.get("hard_pass") else 2
+        if args.cmd == "trace":
+            events = store.list_events(args.run_id)
+            if not events:
+                _print({"error": "unknown_run"})
+                return 1
+            run = store.get_run(args.run_id) or {}
+            path = args.out or (args.db.parent / "traces" / f"{args.run_id}.jsonl")
+            export_jsonl(events, path)
+            spans = stage_spans(events)
+            _print(
+                {
+                    "run_id": args.run_id,
+                    "trace_ids": sorted({e["trace_id"] for e in events if e.get("trace_id")}),
+                    "events": len(events),
+                    "exported_to": str(path),
+                    "redacted_events": sum(1 for e in events if (e.get("payload") or {}).get("_redactions")),
+                    "attribution": classify_run(
+                        status=run.get("status", ""), terminal_reason=run.get("terminal_reason") or "", events=events
+                    ),
+                    "stalled_at": spans["stalled_at"],
+                    "total_ms_by_stage": spans["total_ms_by_stage"],
+                    "kinds": [f"{e['seq']}:{e['kind']}:{e.get('actor')}" for e in events],
+                }
+            )
+            return 0
         if args.cmd == "run":
             run_id = args.run_id or f"cli_{uuid.uuid4().hex[:8]}"
+            trace_id = None
+            if args.event_id:
+                delivery = EventInbox(store).deliver(args.event_id, {"task_id": args.task})
+                if not delivery.accepted:
+                    _print(delivery.to_dict())
+                    return 3
+                run_id = args.run_id or delivery.run_id
+                trace_id = "trace_" + hashlib.sha256(args.event_id.encode("utf-8")).hexdigest()[:16]
             tr = run_task(
                 store=store,
                 task_id=args.task,
@@ -149,10 +206,12 @@ def main(argv: list[str] | None = None) -> int:
                 review_policy=args.review_policy,
                 service=service,
                 model_timeout_sec=120.0 if args.model == "deepseek" else None,
+                trace_id=trace_id,
             )
             _print(
                 {
                     "run_id": tr.run_id,
+                    "trace_id": tr.result.trace_id,
                     "account_id": tr.account_id,
                     "status": tr.status,
                     "terminal_reason": tr.result.terminal_reason,

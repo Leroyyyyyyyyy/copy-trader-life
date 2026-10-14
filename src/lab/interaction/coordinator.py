@@ -42,6 +42,7 @@ def run_task(
     service: ReviewService | None = None,
     credential: bool = True,
     model_timeout_sec: float | None = None,
+    trace_id: Optional[str] = None,
 ) -> TaskRun:
     account_id = account_id or f"acct_{run_id}"
     task, obs = load_agent_view(task_id)
@@ -60,7 +61,7 @@ def run_task(
         policy=ToolPolicy(mode="enforce", plans=env.plan_views),
         model_timeout_sec=model_timeout_sec,
     )
-    result = harness.run(task, run_id=run_id)
+    result = harness.run(task, run_id=run_id, trace_id=trace_id)
     card = None
     if env.pending_proposal is not None and store.get_fence(run_id) is None:
         # A queued proposal is the agent's output even if the run later ran out of
@@ -73,6 +74,7 @@ def run_task(
             proposal=env.pending_proposal,
             bundle=obs,
             review_policy=review_policy,
+            trace_id=result.trace_id,
         )
     return TaskRun(
         run_id=run_id,
