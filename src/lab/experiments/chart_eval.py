@@ -18,7 +18,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Optional
 
-from src.chart_reader import PROMPT_VERSION, read_levels_detail
+from src.chart_ocr import ocr_levels, read_axis_labels
+from src.chart_reader import PROMPT_VERSION, ocr_gate, read_levels_detail
 
 ROOT = Path(__file__).resolve().parents[3]
 LABELS = ROOT / "experiments" / "fixtures" / "charts" / "popi_2026_09_chart_labels.json"
@@ -49,6 +50,7 @@ def score(label: dict[str, Any], pred: dict[str, Any]) -> dict[str, Any]:
         "bucket": "chart",
         "scored": label["legible"],
         "stop": "correct" if stop_ok else ("missing" if sl is None else "wrong"),
+        "stop_exact": _close(sl, label["stop_loss"], 0.000001),
         "entry_ok": _close(entry, label["entry"], 0.003 if label["entry_labeled"] else 0.015),
         "tp_ok": _close(tp, label["take_profit"], 0.003),
         "dangerous": sl is not None and not stop_ok,
@@ -61,6 +63,7 @@ def summarize(rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
     return {
         "charts_scored": len(chart),
         "stop_correct": sum(x["stop"] == "correct" for x in chart),
+        "stop_exact": sum(x.get("stop_exact", False) for x in chart),
         "stop_missing": sum(x["stop"] == "missing" for x in chart),
         "stop_wrong": sum(x["stop"] == "wrong" for x in chart),
         "entry_correct": sum(x["entry_ok"] for x in chart),
@@ -110,12 +113,37 @@ def run(workers: int = 4) -> dict[str, Any]:
             "summary": {"v1": summarize(rows, "v1"), "v2": summarize(rows, "v2")}, "rows": rows}
 
 
+def gate_existing(report_path: Path) -> dict[str, Any]:
+    """v3 = the same v2 vision reads, kept only where an independent OCR read agrees.
+    No new vision calls, so v2 and v3 differ only by the gate."""
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    for row in report["rows"]:
+        p2 = row["v2"]["pred"]
+        if p2.get("error"):
+            p3: dict[str, Any] = {"error": p2["error"]}
+        elif not any(p2.get(k) is not None for k in ("entry", "stop_loss", "take_profit")):
+            p3 = {"entry": None, "stop_loss": None, "take_profit": None, "rejected": p2.get("rejected")}
+        else:
+            ocr = ocr_levels(read_axis_labels(IMAGES / f"{row['id']}.jpg"), "buy")
+            gated, why = ocr_gate(p2, ocr)
+            p3 = {**gated, "rejected": (p2.get("rejected") or []) + why,
+                  "ocr_stop": ocr["stop_loss"], "ocr_entries": ocr["entry_candidates"]}
+        row["v3"] = {"pred": p3, "score": score(row["label"], p3)}
+        for key in ("v1", "v2"):  # rescore with the current scorer
+            row[key]["score"] = score(row["label"], row[key]["pred"])
+    report["summary"] = {"v1": summarize(report["rows"], "v1"), "v2": summarize(report["rows"], "v2"),
+                         "v3_vision_plus_ocr": summarize(report["rows"], "v3")}
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Chart reader eval vs hand labels")
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--gate-from", type=Path, default=None,
+                    help="apply the OCR gate to the v2 reads in an existing report (no vision calls)")
     args = ap.parse_args(argv)
-    report = run(args.workers)
+    report = gate_existing(args.gate_from) if args.gate_from else run(args.workers)
     blob = json.dumps(report, ensure_ascii=False, indent=1, default=str)
     if args.out:
         args.out.write_text(blob + "\n", encoding="utf-8")

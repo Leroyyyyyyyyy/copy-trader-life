@@ -250,7 +250,8 @@ class Engine:
                 except Exception:  # noqa: BLE001 - scale check is best effort
                     ref = None
                 lv = read_levels(
-                    image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h", reference_price=ref
+                    image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h",
+                    reference_price=ref, require_ocr=True,
                 )
                 if signal.trigger_price is None and lv.get("yellow_or_trigger"):
                     signal.trigger_price = float(lv["yellow_or_trigger"])
@@ -264,7 +265,12 @@ class Engine:
                     message_id, signal.symbol, signal.trigger_price, signal.stop_loss, signal.take_profit,
                 )
             except Exception:
-                log.exception("chart vision failed #%s; falling back to proxy trigger", message_id)
+                log.exception("chart vision failed #%s", message_id)
+            if signal.stop_loss is None and not signal.skip_reason:
+                # The chart carried the levels; without a stop that vision and OCR
+                # agree on, do not arm the setup on a proxy trigger.
+                signal.skip_reason = "chart_stop_unverified"
+                signal.intent = Intent.IGNORE
         if signal.mint:
             self.context[channel] = {"mint": signal.mint, "symbol": signal.symbol}
         elif signal.symbol:

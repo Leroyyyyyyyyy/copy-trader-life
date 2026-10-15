@@ -53,6 +53,35 @@ PROMPT_VERSION = "chart.v2"
 CURRENT_PRICE_TOL = 0.0015
 # Reject all levels when the chart's price scale does not match the symbol.
 SCALE_TOL = 0.4
+# Vision and OCR must read the same printed number (labels are exact strings;
+# 0.05% let a one-dollar digit slip through on a 2345.73 stop).
+AGREE_TOL = 0.000001
+
+
+def _agrees(a: Optional[float], b: Optional[float]) -> bool:
+    return a is not None and b is not None and abs(a - b) / b <= AGREE_TOL
+
+
+def ocr_gate(levels: dict[str, Any], ocr: dict[str, Any]) -> tuple[dict[str, Optional[float]], list[str]]:
+    """Keep entry/stop only if OCR read the same number; target is optional.
+
+    Fails closed: if entry or stop is not confirmed, all levels are dropped, so a
+    caller never trades on a half-verified chart.
+    """
+    reasons: list[str] = []
+    entry, stop, target = levels.get("entry"), levels.get("stop_loss"), levels.get("take_profit")
+    entry_ok = entry is not None and any(_agrees(entry, c) for c in ocr["entry_candidates"])
+    stop_ok = _agrees(stop, ocr["stop_loss"])
+    if not entry_ok:
+        reasons.append(f"entry_unconfirmed:vision={entry},ocr={ocr['entry_candidates']}")
+    if not stop_ok:
+        reasons.append(f"stop_unconfirmed:vision={stop},ocr={ocr['stop_loss']}")
+    if not (entry_ok and stop_ok):
+        return {"entry": None, "stop_loss": None, "take_profit": None}, reasons
+    if target is not None and not any(_agrees(target, c) for c in ocr["target_candidates"]):
+        reasons.append(f"target_unconfirmed:vision={target}")
+        target = None
+    return {"entry": entry, "stop_loss": stop, "take_profit": target}, reasons
 
 
 def _prompt(symbol: str, side: str, timeframe: str) -> str:
@@ -91,9 +120,12 @@ def read_levels_detail(
     side: str,
     timeframe: str = "8h",
     reference_price: Optional[float] = None,
+    require_ocr: bool = False,
 ) -> dict[str, Any]:
     """Vision read plus validation. `reference_price` is the symbol's current mark;
-    when given, a chart on a different price scale is rejected."""
+    when given, a chart on a different price scale is rejected. With `require_ocr`,
+    entry and stop must also match an independent OCR read (fails closed when
+    tesseract is missing)."""
     load_env()
     key = os.getenv("DEEPSEEK_API_KEY")
     base = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
@@ -163,9 +195,22 @@ def read_levels_detail(
         if (side == "buy" and out["take_profit"] <= entry) or (side != "buy" and out["take_profit"] >= entry):
             out["take_profit"] = None
             rejected.append("target_on_wrong_side")
+    ocr_info: Optional[dict[str, Any]] = None
+    if require_ocr and any(out[k] is not None for k in ("entry", "stop_loss", "take_profit")):
+        from .chart_ocr import ocr_levels, read_axis_labels, tesseract_available
+
+        if not tesseract_available():
+            out.update(entry=None, stop_loss=None, take_profit=None)
+            rejected.append("ocr_unavailable")
+        else:
+            ocr_info = ocr_levels(read_axis_labels(path), side)
+            gated, why = ocr_gate(out, ocr_info)
+            out.update(gated)
+            rejected.extend(why)
     return {
         **out,
         "raw": raw,
+        "ocr": None if ocr_info is None else {k: v for k, v in ocr_info.items() if k != "labels"},
         "is_price_chart": is_chart,
         "rejected": rejected,
         "prompt_version": PROMPT_VERSION,
@@ -179,7 +224,8 @@ def read_levels(
     side: str,  # "buy" / "sell"
     timeframe: str = "8h",
     reference_price: Optional[float] = None,
+    require_ocr: bool = False,
 ) -> dict[str, Optional[float]]:
     """Return {"yellow_or_trigger", "stop_loss", "take_profit"} (floats or None)."""
-    d = read_levels_detail(image_path, symbol, side, timeframe, reference_price)
+    d = read_levels_detail(image_path, symbol, side, timeframe, reference_price, require_ocr)
     return {"yellow_or_trigger": d["entry"], "stop_loss": d["stop_loss"], "take_profit": d["take_profit"]}

@@ -49,6 +49,16 @@ class ChartVisionPathTests(unittest.TestCase):
         self.assertAlmostEqual(sig.take_profit, 2200.9)
         self.assertIn("chart_vision", sig.reason)
 
+    def test_chart_without_verified_stop_is_not_armed(self):
+        text = "ETH 條件1:漲過黃線 條件2:8H收線在上方"
+        with mock.patch("src.chart_reader.read_levels", return_value={
+            "yellow_or_trigger": None, "stop_loss": None, "take_profit": None,
+        }):
+            plan = self.eng.handle_text("POPIGOGO", 7219, "2026-10-01T00:00:00+00:00", text,
+                                        image_path="data/charts/orig_7217.jpg")
+        self.assertEqual(plan.signal.skip_reason, "chart_stop_unverified")
+        self.assertEqual(plan.signal.intent, Intent.IGNORE)
+
     def test_no_image_uses_proxy(self):
         plan = self.eng.handle_text("POPIGOGO", 7218, "2026-08-19T15:13:24+00:00", ETH_LONG)
         sig = plan.signal
