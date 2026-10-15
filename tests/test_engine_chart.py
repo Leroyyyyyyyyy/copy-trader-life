@@ -87,6 +87,20 @@ class ChartVisionPathTests(unittest.TestCase):
         self.assertEqual(plan.signal.intent, Intent.CONFIRM_BREAKOUT)
         self.assertIn("llm_gate:conditional_setup", plan.signal.reason)
 
+    def test_repost_replaces_pending_setup(self):
+        # POPIGOGO #7841/#7843/#7862/#7885: the same ETH setup posted four times with
+        # stops moved; only the newest may stay armed.
+        stops = iter([2629.32, 2591.85])
+        with mock.patch("src.chart_reader.read_levels", side_effect=lambda *a, **k: {
+                "yellow_or_trigger": 2704.08, "stop_loss": next(stops), "take_profit": None}):
+            text = ("ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 "
+                    "條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦")
+            self.eng.handle_text("POPIGOGO", 7841, "", text, image_path="x.jpg")
+            plan = self.eng.handle_text("POPIGOGO", 7843, "", text, image_path="x.jpg")
+        self.assertEqual([p.signal.message_id for p in self.eng.plans.values()], [7843])
+        self.assertAlmostEqual(plan.signal.stop_loss, 2591.85)
+        self.assertIn("replaces", plan.note)
+
     def test_no_image_uses_proxy(self):
         plan = self.eng.handle_text("POPIGOGO", 7218, "2026-08-19T15:13:24+00:00", ETH_LONG)
         sig = plan.signal

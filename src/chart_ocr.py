@@ -115,10 +115,19 @@ def read_axis_labels(image_path: str | Path) -> list[dict[str, Any]]:
 def ocr_levels(labels: list[dict[str, Any]], side: str, min_votes: int = 1) -> dict[str, Any]:
     """Map OCR labels to roles. The stop is the outermost red label (lowest for a
     long); the current-price label, when red, sits between it and the entry.
-    Labels read with fewer than `min_votes` agreeing variants are ignored."""
+    Labels read with fewer than `min_votes` agreeing variants are ignored, and if
+    the outermost red box is one of them there is no stop."""
     vals = [lb for lb in labels if lb["value"] is not None and lb["votes"] >= min_votes]
     reds = [lb["value"] for lb in vals if lb["colour"] == "red"]
     stop = (min(reds) if side == "buy" else max(reds)) if reds else None
+    # The stop is the outermost red box by position, read or not. If that box was
+    # dropped (unreadable or too few votes, e.g. cut off at the image edge), an
+    # inner red label is usually the current price: no stop rather than that one.
+    red_boxes = [lb for lb in labels if lb["colour"] == "red"]
+    if red_boxes:
+        outer = max(red_boxes, key=lambda lb: lb["y"]) if side == "buy" else min(red_boxes, key=lambda lb: lb["y"])
+        if outer["value"] is None or outer["votes"] < min_votes or outer["value"] != stop:
+            stop = None
     return {
         "stop_loss": stop,
         "stop_candidates": reds,

@@ -340,7 +340,9 @@ class Engine:
             return self._update_exits(plan)
         if signal.intent == Intent.CONFIRM_BREAKOUT and signal.venue == Venue.HYPERLIQUID:
             self._prepare_breakout(signal)
-            return self._park(plan, self._breakout_note(signal))
+            superseded = self._supersede_pending(signal)
+            note = self._breakout_note(signal) + (f"; replaces {','.join(superseded)}" if superseded else "")
+            return self._park(plan, note)
         # HL: 限价/触发单立刻挂到交易所，不在本地等。
         # Solana 土狗没有稳定盘口，本地盯价/市值，触及再市价。
         if signal.venue == Venue.SOLANA and signal.intent in {Intent.WAIT_TARGET, Intent.LIMIT}:
@@ -399,6 +401,19 @@ class Engine:
         plan.note = "replaced tp/sl"
         plan.exchange_result = {"status": "ok", "cancelled": old_orders, "exit_orders": exits}
         return plan
+
+    def _supersede_pending(self, signal: Signal) -> list[str]:
+        """A new setup for a symbol replaces this channel's pending one: authors
+        repost the same setup with a moved stop, and each repost must not arm
+        another plan (they would all fire on the same breakout)."""
+        old = [pid for pid, p in self.plans.items()
+               if p.status == Status.PENDING and p.signal.key() == signal.key()
+               and p.signal.channel == signal.channel]
+        for pid in old:
+            self.plans.pop(pid)
+            self.store.drop_plan(pid)
+            log.info("pending %s superseded by %s #%s", pid, signal.channel, signal.message_id)
+        return old
 
     def _park(self, plan: Plan, note: str) -> Plan:
         plan.status = Status.PENDING

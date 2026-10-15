@@ -120,6 +120,8 @@ Lab 的 DeepSeek 适配器（`src/lab/models/provider.py`）只从 `.env` 读取
 
 LLM 闸门（`src/llm_gate.py`）：规则解析器判出要下单/改单/平仓后、读图之前，DeepSeek 读这条消息和频道前 6 条，判断作者是在叫人交易（`enter_now` / `conditional_setup` / `adjust_exit` / `close`）还是在复盘、炫耀、评论（`not_actionable`）；方向、币种也要与解析器一致才放行，出错默认不放行。配置 `config.yaml` 的 `llm_gate: {enabled, on_error}`；模型取 `DEEPSEEK_GATE_MODEL`，否则同 lab。评测：`python -m src.lab.experiments.gate_eval --repeats 3`（标准答案 `experiments/fixtures/gate/`）。
 
+整链路月度重放：`python -m src.lab.experiments.engine_replay`（纸交易 Engine，不连接交易所，状态与日志写到 `data/lab/engine_replay/`；需要先有 `data/lab/popigogo_30d.json`、`data/lab/popi_images/`、`data/lab/hl_universe.json`）。
+
 H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。L5 的 LangGraph adapter 需要 `langgraph`（见 `requirements.txt`）；native adapter 不依赖它。
 
 观察与隐藏标签分目录：`experiments/fixtures/observations/` 与 `experiments/fixtures/labels/`。Agent 路径只应使用 `load_agent_view`，不要加载 labels。F1 共用循环在 `src/lab/harness/loop.py`。L2 压缩在 `src/lab/context/`。L3 记忆在 `src/lab/memory/`，技能在 `src/lab/skills/` 与 `experiments/skill_library/`。H2 观察策略在 `src/lab/environments/allowed_actions.py`，矩阵在 `src/lab/experiments/h2_observation.py`。H3 沙箱在 `src/lab/sandbox/`。L4 角色与编排在 `src/lab/agents/`。L5 共用节点与两套 adapter 在 `src/lab/workflows/`。L6 闸门在 `src/lab/tools/policy.py`，trace 脱敏/归因在 `src/lab/observability/`，取消与事件去重在 `src/lab/runtime/cancel.py`、`inbox.py`，故障集与对照在 `src/lab/experiments/f6_faults.py`，报告写入 `experiments/reports/`。L7 复核在 `src/lab/interaction/`（`review.py` 审核卡与响应校验，`coordinator.py` 运行并转审），CLI 在 `src/lab/cli.py`，审核策略批量评测在 `src/lab/experiments/f7_review.py`。

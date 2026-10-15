@@ -97,6 +97,21 @@ class OcrPrimaryGateTests(unittest.TestCase):
         out, why = ocr_primary_gate({"entry": 68792.95, "stop_loss": 71552.26, "take_profit": 60342.55}, ocr)
         self.assertIsNone(out["stop_loss"])
 
+    def test_low_vote_outermost_red_means_no_stop(self):
+        # POPIGOGO #7712 (engine replay): the stop label is cut off at the bottom edge
+        # and read by 2 variants only; the inner red label is the current price.
+        labels = [
+            {"colour": "grey", "y": 180, "value": 77343.44, "votes": 6},
+            {"colour": "red", "y": 218, "value": 76051.1, "votes": 4},
+            {"colour": "red", "y": 254, "value": 74877.87, "votes": 2},
+        ]
+        ocr = ocr_levels(labels, "buy", min_votes=3)
+        self.assertIsNone(ocr["stop_loss"])
+        out, _ = ocr_primary_gate({"entry": 77343.44, "stop_loss": 76051.1, "take_profit": None}, ocr)
+        self.assertIsNone(out["stop_loss"])
+        unread = [dict(labels[2], value=None, votes=0)]
+        self.assertIsNone(ocr_levels(labels[:2] + unread, "buy", min_votes=3)["stop_loss"])
+
     def test_entry_takes_nearest_grey_label(self):
         # POPIGOGO #7843: vision picked another line (2687.65) for entry; grey label is 2704.08.
         out, _ = ocr_primary_gate({"entry": 2687.65, "stop_loss": 2591.85, "take_profit": 3504.16},
