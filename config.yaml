@@ -22,6 +22,9 @@ channels:
     min_confidence: 0.68
     confidence_boost: 0.08
     default_symbol: BTC
+    # Assets this channel names without a $TICKER. If one is named, the parser
+    # must not fall back to default_symbol (2026-09: "牛來…條件1" was read as BTC).
+    other_assets: ["牛來", "牛来", "PONS"]
     inherit_context: true
     require_explicit: false
     allow_perp: true

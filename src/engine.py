@@ -227,6 +227,7 @@ class Engine:
             default_symbol=ch.get("default_symbol") or ctx.get("symbol"),
             default_mint=ctx.get("mint") if inherit else None,
             hl_universe=set(self.hl.universe) or None,
+            other_assets=ch.get("other_assets"),
         )
         boost = float(ch.get("confidence_boost") or 0)
         if boost and not signal.skip_reason:

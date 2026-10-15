@@ -7,7 +7,7 @@ from src.models import Intent, Side, Venue
 HL = {"BTC", "ETH", "SOL", "ENA", "HYPE"}
 
 
-def p(text, channel="POPIGOGO", default="BTC"):
+def p(text, channel="POPIGOGO", default="BTC", other_assets=None):
     return parse_message(
         channel=channel,
         message_id=1,
@@ -15,6 +15,7 @@ def p(text, channel="POPIGOGO", default="BTC"):
         text=text,
         default_symbol=default,
         hl_universe=HL,
+        other_assets=other_assets,
     )
 
 
@@ -84,6 +85,74 @@ class ParserTests(unittest.TestCase):
         s = p("你怕踏空就去买现货COIN 绝对不要去做空任何东西")
         self.assertIn(s.skip_reason, {"off_venue_stock", "avoid_short_not_a_buy", "ad_or_referral"})
         self.assertEqual(s.intent, Intent.IGNORE)
+
+    def test_named_other_asset_setup_is_not_default_btc(self):
+        # POPIGOGO #7683, 2026-09-14: chart prices 0.10-0.16, not BTC.
+        s = p("牛來你想做合約的話 可以看看這個 條件1:漲過黃線 條件2:2H收線在上方 (4H是最好)",
+              other_assets=["牛來", "PONS"])
+        self.assertEqual(s.symbol, "牛來")
+        self.assertNotEqual(s.venue, Venue.HYPERLIQUID)
+        self.assertEqual(s.intent, Intent.IGNORE)
+        self.assertEqual(s.skip_reason, "off_venue_asset")
+
+    def test_dollar_non_ascii_asset_is_not_default_btc(self):
+        # POPIGOGO #7788: "$牛來" with no configured list still must not become BTC.
+        s = p("$牛來合約可能的機會 你們可以試試看 條件1:漲過黃線 條件2:4H收過黃線上方")
+        self.assertIsNone(s.symbol)
+        self.assertEqual(s.skip_reason, "unknown_asset")
+        self.assertEqual(s.intent, Intent.IGNORE)
+
+    def test_unnamed_conditional_setup_still_defaults_to_btc(self):
+        # popi_2026_setups #7154: no symbol in text, it was a BTC setup.
+        s = p("還是想等突破67250那個點在做 不過有機會的話 這單也可以觀察看看 記得要等12H收線才算成立喔 "
+              "條件1:跌過這黃色線 條件2: 12H收在下方", other_assets=["牛來", "PONS"])
+        self.assertEqual(s.symbol, "BTC")
+
+    def test_dollar_price_is_not_an_asset(self):
+        s = p("我的目標是$3 還有10倍", other_assets=["牛來"])
+        self.assertNotEqual(s.skip_reason, "unknown_asset")
+
+    def test_naked_hl_ticker_is_recognized(self):
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"ZEC"}, other_assets=["牛來"],
+                          text="ZEC 可能的合約機會 條件1:漲過黃線 條件2: 8H收過黃線")
+        self.assertEqual((s.symbol, s.venue), ("ZEC", Venue.HYPERLIQUID))
+
+    def test_named_asset_on_hl_trades_on_hl(self):
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"PONS"}, other_assets=["牛來", "PONS"],
+                          text="關於PONS 我覺得有一個合約的機會 條件1:漲過黃線 條件2:6H收線在上")
+        self.assertEqual((s.symbol, s.venue), ("PONS", Venue.HYPERLIQUID))
+
+    def test_named_asset_off_hl_is_skipped(self):
+        s = p("關於PONS 我覺得有一個合約的機會 條件1:漲過黃線 條件2:6H收線在上", other_assets=["PONS"])
+        self.assertEqual((s.symbol, s.skip_reason), ("PONS", "off_venue_asset"))
+
+    def test_word_like_short_names_need_dollar(self):
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"NOT", "ME", "IO"}, text="NOT ME IO 不要做空 條件1:漲過黃線 條件2:8H收線")
+        self.assertEqual(s.symbol, "BTC")
+
+    def test_setup_with_referral_tail_is_not_an_ad(self):
+        # POPIGOGO #8001
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"PONS"}, other_assets=["牛來", "PONS"],
+                          text="關於PONS 我覺得有一個合約的機會 你們可以小倉試試看 PONS我還是建議盡量現貨為主的 別上頭哦 "
+                               "條件1:漲過黃線 條件2:6H收線在上方 OURBIT也可以玩PONS合約哦: https://www.ourbit.com/zh-TW/register?inviteCode=POPI88")
+        self.assertEqual((s.symbol, s.intent), ("PONS", Intent.CONFIRM_BREAKOUT))
+
+    def test_spot_advice_is_not_a_perp_entry(self):
+        # POPIGOGO #7950
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"PONS"}, other_assets=["PONS"],
+                          text="PONS已經快接近 0.385~0.29的區域了 我建議著重等待這個區域 到的時候 買點現貨放著 "
+                               "依我的經驗 通常都有不錯的收益 怕錯過就掛單掛好~ 合約我目前沒有想開就是了")
+        self.assertEqual((s.skip_reason, s.intent), ("spot_only", Intent.IGNORE))
+
+    def test_meme_word_is_not_a_ticker(self):
+        s = parse_message(channel="POPIGOGO", message_id=1, date="", default_symbol="BTC",
+                          hl_universe=HL | {"MEME"}, text="拿現貨MEME是比誰拿的久")
+        self.assertNotEqual(s.symbol, "MEME")
 
     def test_hold_skips_order(self):
         s = p("p是不会p的，我只会买入并持有。", channel="Theabyssofgambling", default=None)

@@ -39,7 +39,7 @@ def rule_parser_view(task_id: str) -> dict[str, Any]:
     last = obs.messages[-1]
     msg_id = int(last.message_id) if last.message_id.isdigit() else 0
     sig = parse_message(channel="POPIGOGO", message_id=msg_id, date=last.visible_at, text=last.text,
-                        default_symbol=ch.get("default_symbol"))
+                        default_symbol=ch.get("default_symbol"), other_assets=ch.get("other_assets"))
     boost = float(ch.get("confidence_boost") or 0)
     conf = sig.confidence if sig.skip_reason else max(0.0, min(0.99, sig.confidence + boost))
     acts = not sig.skip_reason and sig.intent.value != "ignore" and conf >= float(ch.get("min_confidence") or 0)

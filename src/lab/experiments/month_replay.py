@@ -62,7 +62,7 @@ NOTE = (
 
 def rule_view(post: dict[str, Any], ch: dict[str, Any]) -> dict[str, Any]:
     sig = parse_message(channel=CHANNEL, message_id=post["id"], date=post["date"], text=post["text"],
-                        default_symbol=ch.get("default_symbol"))
+                        default_symbol=ch.get("default_symbol"), other_assets=ch.get("other_assets"))
     boost = float(ch.get("confidence_boost") or 0)
     conf = sig.confidence if sig.skip_reason else max(0.0, min(0.99, sig.confidence + boost))
     acts = (not sig.skip_reason and sig.intent.value != "ignore"

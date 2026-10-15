@@ -46,6 +46,12 @@ AD_PATTERNS = [
 NAKED_TICKER_RE = re.compile(
     r"(?<![A-Za-z0-9])(BTC|ETH|SOL|HYPE|ENA)(?![A-Za-z0-9])", re.I
 )
+# Bare uppercase words that are Hyperliquid perps (e.g. "ZEC", "PONS") count as
+# tickers when the venue universe is known. Short or word-like names need "$".
+NAKED_HL_RE = re.compile(r"(?<![A-Za-z0-9$])([A-Z][A-Z0-9]{2,9})(?![A-Za-z0-9])")
+NAKED_HL_STOP = frozenset(
+    {"NOT", "GAS", "ALT", "ACE", "APE", "SKY", "LIT", "MET", "BIO", "MON", "NIL", "UNI", "ONE", "TRUMP", "MEME"}
+)
 TF_RE = re.compile(r"(\d+)\s*([HhDdWw]|小时|小時|日|周)")
 SMALL_SIZE_RE = re.compile(r"开小一些|開小一些|部位不会跟平常一样大|部位不會跟平常一樣大|小仓|小倉|仓位.*小|倉位.*小")
 BREAKOUT_RE = re.compile(r"涨过|漲過|突破|破新高|前高|黄线|黃線|收线在上方|收線在上方")
@@ -301,11 +307,17 @@ def parse_message(
     default_symbol: Optional[str] = None,
     default_mint: Optional[str] = None,
     hl_universe: Optional[set[str]] = None,
+    other_assets: Optional[list[str]] = None,
 ) -> Signal:
     raw = html.unescape(text or "")
     compact = raw.strip()
     tickers = [normalize_symbol(t) for t in TICKER_RE.findall(raw)]
     tickers += [normalize_symbol(t) for t in NAKED_TICKER_RE.findall(raw)]
+    if hl_universe:
+        tickers += [
+            t for t in NAKED_HL_RE.findall(raw)
+            if t in hl_universe and t not in NAKED_HL_STOP
+        ]
     tickers = [t for t in tickers if t]
     # preserve order, drop dupes
     seen_t = set()
@@ -321,10 +333,14 @@ def parse_message(
     prices = extract_prices(raw)
     rng = extract_range(raw)
 
+    has_setup = bool(
+        re.search(r"条件\s*1|條件\s*1", compact) and re.search(r"条件\s*2|條件\s*2|收线|收線", compact)
+    )
     skip = None
     if not compact:
         skip = "empty"
-    elif _has(AD_PATTERNS, compact):
+    elif _has(AD_PATTERNS, compact) and not has_setup:
+        # A real 條件1/條件2 setup with a referral link appended is still a setup.
         skip = "ad_or_referral"
     elif _has(NSFW_SKIP, compact):
         skip = "nsfw"
@@ -332,6 +348,13 @@ def parse_message(
         skip = "macro_or_link_only"
     elif re.fullmatch(r"https?://\S+", compact):
         skip = "link_only"
+
+    # The text names an asset that is not the channel default: a configured name
+    # (e.g. 牛來, PONS) or a "$" followed by a non-ASCII token ($牛來). Then the
+    # default symbol must not be assumed.
+    named_other = [a for a in (other_assets or []) if a and re.search(re.escape(a), raw, re.I)]
+    dollar_non_ascii = bool(re.search(r"(?<![A-Za-z0-9])\$(?![A-Za-z0-9\s])", raw))
+    names_other_asset = bool(named_other or dollar_non_ascii)
 
     venue = Venue.NONE
     symbol = None
@@ -352,6 +375,12 @@ def parse_message(
             venue = Venue.HYPERLIQUID
         else:
             venue = Venue.SOLANA
+    elif names_other_asset:
+        symbol = normalize_symbol(named_other[0]) if named_other else None
+        if symbol and hl_universe is not None and symbol in hl_universe:
+            venue = Venue.HYPERLIQUID
+        else:
+            skip = skip or ("off_venue_asset" if symbol else "unknown_asset")
     elif default_symbol and (
         re.search(r"\bBTC\b|比特币|大饼", compact, re.I)
         or (_has(TARGET_PATTERNS, compact) and prices and not tickers)
@@ -365,6 +394,16 @@ def parse_message(
         symbol = normalize_symbol(default_symbol)
         venue = Venue.HYPERLIQUID
 
+    perp_words = re.sub(  # drop negated mentions like "合約我目前沒有想開"
+        r"(合约|合約)[^，。,.!！?？]{0,8}?(沒有|没有|不會|不会|不想|不)[想要]?(開|开)", "", compact
+    )
+    if (
+        venue == Venue.HYPERLIQUID
+        and re.search(r"现货|現貨", compact)
+        and not re.search(r"合约|合約|做多|做空|开多|開多|开空|開空|多单|多單|空单|空單", perp_words)
+    ):
+        # Spot-buying advice is not a perp entry.
+        skip = skip or "spot_only"
     if re.search(r"股票|现货\s*\$?COIN|現貨\s*\$?COIN", compact) and not mint:
         skip = skip or "off_venue_stock"
         venue = Venue.NONE
