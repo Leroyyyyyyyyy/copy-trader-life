@@ -8,6 +8,7 @@ dangerous failure: the bot trades on a post it should have ignored.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -16,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from src.llm_gate import GATE_VERSION, decide, review
+from src.llm_gate import GATE_VERSION, decide, review, review_many
 from src.parser import parse_message
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -109,6 +110,44 @@ def rescore(path: Path) -> dict[str, Any]:
     return report
 
 
+def _vote_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    summary = {}
+    for set_id in SOURCES:
+        rs = [r for r in rows if r["set"] == set_id]
+        for name, sub in (("all", rs), ("unambiguous", [r for r in rs if not r["ambiguous"]])):
+            outs = Counter(r["outcome"] for r in sub)
+            summary[f"{set_id}/{name}"] = {
+                "cases": len(sub), **{k: outs.get(k, 0) for k in ("correct", "wrong_allow", "wrong_block", "review", "error")},
+                "review_ids": [r["id"] for r in sub if r["outcome"] == "review"],
+                "actions": dict(Counter(r["decision"]["action"] for r in sub)),
+            }
+    return summary
+
+
+def run_votes(samples: int = 3, workers: int = 3) -> dict[str, Any]:
+    """What the engine does now: review_many per case. allow / block act on their
+    own; review goes to a human (neither right nor wrong here); close / cancel
+    count as blocking the parser's entry."""
+    cases = _cases()
+
+    def one(c: dict[str, Any]) -> dict[str, Any]:
+        d = review_many(samples=samples, text=c["text"], context=c["context"], parsed=c["parsed"],
+                        has_image=c["has_image"])
+        if d.action == "review":
+            outcome = "review"
+        elif d.error:
+            outcome = "error"
+        else:
+            outcome = _outcome(d.action == "allow", c["should_act"])
+        return {**{k: c[k] for k in ("set", "id", "should_act", "ambiguous", "note", "parsed")},
+                "text": c["text"][:200], "decision": d.to_dict(), "outcome": outcome}
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        rows = list(pool.map(one, cases))
+    summary = _vote_summary(rows)
+    return {"gate_version": GATE_VERSION, "mode": f"review_many x{samples}", "summary": summary, "rows": rows}
+
+
 def main(argv: list[str] | None = None) -> int:
     import os
 
@@ -120,8 +159,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--rescore", type=Path, default=None, help="re-apply current rules to a saved report")
+    ap.add_argument("--votes", type=int, default=0, help="score review_many with this many samples per case")
     args = ap.parse_args(argv)
-    report = rescore(args.rescore) if args.rescore else run(repeats=args.repeats)
+    if args.votes:
+        report = run_votes(args.votes)
+    else:
+        report = rescore(args.rescore) if args.rescore else run(repeats=args.repeats)
     if args.out:
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     sys.stdout.write(json.dumps(report["summary"], ensure_ascii=False, indent=1) + "\n")

@@ -37,6 +37,7 @@ class Status(str, Enum):
     CANCELLED = "cancelled"
     SKIPPED = "skipped"
     FAILED = "failed"
+    REVIEW = "review"  # held for a human (src/review.py)
 
 
 @dataclass

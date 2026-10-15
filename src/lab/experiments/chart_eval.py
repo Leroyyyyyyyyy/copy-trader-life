@@ -21,6 +21,8 @@ from typing import Any, Optional
 from src.chart_ocr import ocr_levels, read_axis_labels
 from src.chart_reader import (
     OCR_PRIMARY_MIN_VOTES,
+    ROLES_PROMPT_VERSION,
+    read_levels_roles,
     PROMPT_VERSION,
     _post_checks,
     ocr_gate,
@@ -179,6 +181,38 @@ def run_heldout(labels_path: Path, workers: int = 4) -> dict[str, Any]:
     return add_gates(report, HELDOUT_REFERENCE)
 
 
+HELDOUT = ROOT / "experiments" / "fixtures" / "charts" / "popi_2026_h1_heldout_labels.json"
+
+
+def _v5_one(label: dict[str, Any], table: dict[str, float], samples: int) -> dict[str, Any]:
+    t0 = time.perf_counter()
+    try:
+        d = read_levels_roles(_image(label), label["text_symbol"], label.get("side", "buy"),
+                              TIMEFRAME.get(label["id"], "8h"), reference_price=_ref(label, table), samples=samples)
+    except Exception as exc:  # noqa: BLE001
+        d = {"error": f"{type(exc).__name__}: {str(exc)[:160]}"}
+    d["sec"] = round(time.perf_counter() - t0, 1)
+    return d
+
+
+def run_roles(samples: int = 2, workers: int = 4) -> dict[str, Any]:
+    """v5 = OCR reads the labels, vision assigns roles by index (`samples` reads must agree)."""
+    out: dict[str, Any] = {"prompt_version": ROLES_PROMPT_VERSION, "samples": samples, "summary": {}, "rows": []}
+    for name, path, table in (("dev_2026_09", LABELS, REFERENCE), ("heldout_2026_h1", HELDOUT, HELDOUT_REFERENCE)):
+        labels = json.loads(path.read_text(encoding="utf-8"))["labels"]
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            preds = list(pool.map(lambda lb: _v5_one(lb, table, samples), labels))
+        rows = [{"set": name, "id": lb["id"], "label": lb, "v5": {"pred": p, "score": score(lb, p)}}
+                for lb, p in zip(labels, preds)]
+        summary = summarize(rows, "v5")
+        summary["held_for_review"] = [r["id"] for r in rows if r["v5"]["pred"].get("review")]
+        summary["vision_failed"] = [r["id"] for r in rows if "vision_failed" in (r["v5"]["pred"].get("rejected") or [])]
+        summary["completion_tokens"] = sum((r["v5"]["pred"].get("usage") or {}).get("completion_tokens", 0) for r in rows)
+        out["summary"][name] = summary
+        out["rows"] += rows
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Chart reader eval vs hand labels")
     ap.add_argument("--out", type=Path, default=None)
@@ -186,8 +220,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--heldout", type=Path, default=None, help="label file to run v2+v3+v4 on (fresh vision calls)")
     ap.add_argument("--gate-from", type=Path, default=None,
                     help="apply the OCR gate to the v2 reads in an existing report (no vision calls)")
+    ap.add_argument("--roles", action="store_true", help="v5: OCR labels + vision roles on dev and held-out")
+    ap.add_argument("--samples", type=int, default=2)
     args = ap.parse_args(argv)
-    if args.heldout:
+    if args.roles:
+        report = run_roles(args.samples, args.workers)
+    elif args.heldout:
         report = run_heldout(args.heldout, args.workers)
     elif args.gate_from:
         report = gate_existing(args.gate_from)

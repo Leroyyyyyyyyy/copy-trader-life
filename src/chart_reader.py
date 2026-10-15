@@ -289,6 +289,193 @@ def _post_checks(
     return why
 
 
+ROLES_PROMPT_VERSION = "chart.roles.v1"
+ROLE_MIN_VOTES = OCR_PRIMARY_MIN_VOTES
+
+
+def _roles_prompt(symbol: str, side: str, timeframe: str, labels: list[dict[str, Any]], height: int) -> str:
+    long_short = "LONG" if side == "buy" else "SHORT"
+    rows = "\n".join(
+        f"  [{i}] {lb['colour']} box at {round(100 * lb['y'] / max(1, height))}% from the top, OCR read: {lb['value']}"
+        for i, lb in enumerate(labels)
+    )
+    return (
+        f"The caption says this is a {symbol} {long_short} setup, timeframe {timeframe}. The image may or may "
+        "not be a price chart.\n"
+        "OCR found these coloured price labels on the right axis (top to bottom):\n"
+        f"{rows}\n"
+        "These charts use the TradingView long/short position tool. Say which label is which, by index:\n"
+        "- entry: the GREY label at the boundary between the teal (profit) box and the red (loss) box, where a "
+        "short yellow line usually starts.\n"
+        f"- stop_loss: the RED label at the far edge of the red box ({'bottom' if side == 'buy' else 'top'} edge).\n"
+        "- take_profit: the label at the far edge of the teal box, or null.\n"
+        "- current_price: the label on the thin dotted horizontal line across the chart, or null. It is never the "
+        "stop or the target.\n"
+        "Do not read the numbers yourself. If an OCR number you assign is clearly different from what the image "
+        "shows, list that index in misread.\n"
+        "If the image is not a price chart, set is_price_chart to false and all roles to null.\n"
+        "Reply with ONE json object: "
+        '{"is_price_chart": true|false, "entry": <index|null>, "stop_loss": <index|null>, '
+        '"take_profit": <index|null>, "current_price": <index|null>, "misread": [<index>, ...]}'
+    )
+
+
+def _vision_json(prompt: str, path: Path, retries: int = 1) -> tuple[dict[str, Any], dict[str, Any]]:
+    """One vision call returning (parsed json, usage). An empty reply (the model spent
+    max_tokens reasoning) or bad JSON is retried; then it raises."""
+    load_env()
+    key = os.getenv("DEEPSEEK_API_KEY")
+    base = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    model = os.getenv("DEEPSEEK_VISION_MODEL", "deepseek-flash")
+    if not key:
+        raise RuntimeError("DEEPSEEK_API_KEY missing in .env")
+    body = {
+        "model": model,
+        "messages": [{"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": _to_data_url(path)}}]}],
+        "response_format": {"type": "json_object"},
+        "temperature": 0,
+        "max_tokens": 16000,
+    }
+    err = ""
+    for _ in range(1 + retries):
+        with httpx.Client(timeout=180) as http:
+            r = http.post(f"{base.rstrip('/')}/chat/completions", headers={"Authorization": f"Bearer {key}"}, json=body)
+        if r.status_code != 200:
+            err = f"vision HTTP {r.status_code}"
+            continue
+        data = r.json()
+        choice = data["choices"][0]
+        content = (choice["message"].get("content") or "").strip()
+        if not content:
+            err = f"empty vision reply (finish_reason={choice.get('finish_reason')})"
+            continue
+        try:
+            return _extract_json(content), data.get("usage") or {}
+        except ValueError as exc:
+            err = str(exc)[:200]
+    raise RuntimeError(err)
+
+
+def _idx(v: Any, n: int) -> Optional[int]:
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < n else None
+
+
+def read_levels_roles(
+    image_path: str | Path,
+    symbol: str,
+    side: str,
+    timeframe: str = "8h",
+    reference_price: Optional[float] = None,
+    samples: int = 2,
+) -> dict[str, Any]:
+    """OCR reads every coloured axis label; the vision model only says which label is
+    entry / stop / target / current price (by index), `samples` times in parallel.
+
+    - Any sample failing (after one retry) -> no levels ("vision_failed").
+    - Samples disagreeing on chart / entry / stop -> no levels and `review` is set,
+      with each reading, so a human can pick.
+    - The stop must be a red label read by >= ROLE_MIN_VOTES OCR variants and the
+      outermost red box; the entry a grey/blue label with as many votes; a label the
+      model flags as misread is not used. Then side / current-price / scale checks.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    from PIL import Image
+
+    from .chart_ocr import ocr_levels, read_axis_labels, tesseract_available
+
+    path = Path(image_path)
+    if not path.exists():
+        raise FileNotFoundError(image_path)
+    none: dict[str, Optional[float]] = {"entry": None, "stop_loss": None, "take_profit": None, "current_price": None}
+    base_out = {"prompt_version": ROLES_PROMPT_VERSION, "review": None, "samples": [], "usage": {}}
+    if not tesseract_available():
+        return {**none, **base_out, "rejected": ["ocr_unavailable"], "ocr": None}
+    labels = read_axis_labels(path)
+    ocr = ocr_levels(labels, side, min_votes=ROLE_MIN_VOTES)
+    ocr_brief = {k: v for k, v in ocr.items() if k != "labels"}
+    if not any(lb["value"] is not None for lb in labels):
+        return {**none, **base_out, "rejected": ["no_ocr_labels"], "ocr": ocr_brief}
+    with Image.open(path) as im:
+        height = im.size[1]
+    prompt = _roles_prompt(symbol, side, timeframe, labels, height)
+
+    def one(_: int) -> dict[str, Any]:
+        try:
+            parsed, usage = _vision_json(prompt, path)
+        except Exception as exc:  # noqa: BLE001 - reported per sample
+            return {"error": f"{type(exc).__name__}: {exc}"[:200]}
+        n = len(labels)
+        return {"is_price_chart": parsed.get("is_price_chart", True) is not False,
+                **{k: _idx(parsed.get(k), n) for k in ("entry", "stop_loss", "take_profit", "current_price")},
+                "misread": [i for i in (parsed.get("misread") or []) if _idx(i, n) is not None],
+                "usage": usage}
+
+    with ThreadPoolExecutor(max_workers=max(1, samples)) as pool:
+        reads = list(pool.map(one, range(max(1, samples))))
+    usage: dict[str, Any] = {}
+    for rd in reads:
+        for k, v in (rd.get("usage") or {}).items():
+            if isinstance(v, (int, float)):
+                usage[k] = usage.get(k, 0) + v
+    base_out.update(samples=[{k: v for k, v in rd.items() if k != "usage"} for rd in reads], usage=usage)
+
+    def value(i: Optional[int]) -> Optional[float]:
+        return None if i is None else labels[i]["value"]
+
+    if any("error" in rd for rd in reads):
+        return {**none, **base_out, "rejected": ["vision_failed"], "ocr": ocr_brief}
+    keys = {(rd["is_price_chart"], rd["entry"], rd["stop_loss"]) for rd in reads}
+    if len(keys) > 1:
+        def problems(rd: dict[str, Any]) -> list[str]:
+            why = []
+            for role, i, colours in (("entry", rd["entry"], ("grey", "blue")), ("stop_loss", rd["stop_loss"], ("red",))):
+                if i is None:
+                    why.append(f"{role}:none")
+                    continue
+                if labels[i]["colour"] not in colours:
+                    why.append(f"{role}:colour_{labels[i]['colour']}")
+                if labels[i]["votes"] < ROLE_MIN_VOTES:
+                    why.append(f"{role}:ocr_votes_{labels[i]['votes']}")
+                if i in rd["misread"]:
+                    why.append(f"{role}:flagged_misread")
+            if rd["stop_loss"] is not None and value(rd["stop_loss"]) != ocr["stop_loss"]:
+                why.append("stop_loss:not_the_outermost_red_label")
+            if rd["stop_loss"] is not None and rd["stop_loss"] == rd["current_price"]:
+                why.append("stop_loss:is_current_price")
+            return why
+
+        options = [{"entry": value(rd["entry"]), "stop_loss": value(rd["stop_loss"]),
+                    "take_profit": value(rd["take_profit"]), "is_price_chart": rd["is_price_chart"],
+                    "fails_checks": problems(rd)} for rd in reads]
+        return {**none, **base_out, "rejected": ["vision_samples_disagree"], "ocr": ocr_brief,
+                "review": {"reason": "chart reads disagree", "options": options}}
+    rd = reads[0]
+    if not rd["is_price_chart"]:
+        return {**none, **base_out, "rejected": ["not_a_price_chart"], "ocr": ocr_brief}
+    rejected: list[str] = []
+    misread = set().union(*(set(r["misread"]) for r in reads))
+    e, sl, tp, cur = rd["entry"], rd["stop_loss"], rd["take_profit"], rd["current_price"]
+    if e is None or labels[e]["colour"] not in ("grey", "blue") or labels[e]["votes"] < ROLE_MIN_VOTES or e in misread:
+        rejected.append(f"entry_label_unusable:{e}")
+    if (sl is None or labels[sl]["colour"] != "red" or labels[sl]["votes"] < ROLE_MIN_VOTES or sl in misread
+            or sl == cur or value(sl) != ocr["stop_loss"]):
+        rejected.append(f"stop_label_unusable:{sl},outermost_red={ocr['stop_loss']}")
+    if rejected:
+        return {**none, **base_out, "rejected": rejected, "ocr": ocr_brief}
+    target = None
+    if tp is not None and labels[tp]["colour"] == "green" and labels[tp]["votes"] >= ROLE_MIN_VOTES \
+            and tp not in misread and tp != cur and all(r["take_profit"] == tp for r in reads):
+        target = value(tp)
+    elif tp is not None:
+        rejected.append(f"target_label_unusable:{tp}")
+    levels = {"entry": value(e), "stop_loss": value(sl), "take_profit": target}
+    rejected += _post_checks(levels, side, value(cur), reference_price)
+    return {**levels, "current_price": value(cur), **base_out, "rejected": rejected, "ocr": ocr_brief}
+
+
 def read_levels(
     image_path: str | Path,
     symbol: str,

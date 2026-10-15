@@ -1,4 +1,4 @@
-"""One month of POPIGOGO through the paper Engine: parser -> LLM gate -> chart v4 -> risk -> paper venue.
+"""One month of POPIGOGO through the paper Engine: parser -> LLM gate (3 votes) -> chart roles -> risk -> paper venue.
 
 Same posts as month_replay (2026-09-14..10-14), in order, through `Engine.handle_text`
 with dry_run=True. Isolation from the production engine:
@@ -94,7 +94,7 @@ def run(out_dir: Path, limit: int | None) -> Path:
     risk_mod.time = clock
 
     seen: dict[str, Any] = {}
-    real_review, real_detail = llm_gate.review, chart_reader.read_levels_detail
+    real_review, real_detail = llm_gate.review_many, chart_reader.read_levels_roles
 
     def review(**kw: Any) -> Any:
         d = real_review(**kw)
@@ -107,10 +107,11 @@ def run(out_dir: Path, limit: int | None) -> Path:
         except Exception as exc:  # noqa: BLE001
             seen["chart"] = {"error": f"{type(exc).__name__}: {exc}"[:200]}
             raise
-        seen["chart"] = {k: d.get(k) for k in ("entry", "stop_loss", "take_profit", "current_price", "rejected", "ocr")}
+        seen["chart"] = {k: d.get(k) for k in ("entry", "stop_loss", "take_profit", "current_price", "rejected",
+                                               "ocr", "review", "samples")}
         return d
 
-    llm_gate.review, chart_reader.read_levels_detail = review, detail
+    llm_gate.review_many, chart_reader.read_levels_roles = review, detail
     posts = [p for p in json.loads(POSTS.read_text(encoding="utf-8")) if p["text"]]
     if limit:
         posts = posts[:limit]
@@ -144,7 +145,7 @@ def run(out_dir: Path, limit: int | None) -> Path:
                       f"gate={(row['gate'] or {}).get('verdict')} skip={sig.skip_reason if sig else ''} {row['sec']}s",
                       flush=True)
     finally:
-        llm_gate.review, chart_reader.read_levels_detail = real_review, real_detail
+        llm_gate.review_many, chart_reader.read_levels_roles = real_review, real_detail
     return rows_path
 
 
@@ -202,12 +203,19 @@ def summarize(rows_path: Path) -> dict[str, Any]:
         "acted_by_intent": Counter(r["signal"]["intent"] for r in acted),
         "entries_without_stop": sum(1 for r in acted if r["signal"]["side"] in ("buy", "sell")
                                     and r["signal"]["intent"] != "update" and r["signal"]["stop_loss"] is None),
-        "gate": {"calls": len(gated), "allowed": sum(r["gate"]["allow"] for r in gated),
+        "gate": {"posts": len(gated), "actions": Counter(r["gate"].get("action") for r in gated),
                  "verdicts": Counter(r["gate"]["verdict"] for r in gated),
                  "errors": sum(bool(r["gate"]["error"]) for r in gated)},
+        "held_for_review": [{"id": r["id"], "note": r["plan"]["note"][:160]} for r in rows
+                            if r["plan"] and r["plan"]["status"] == "review"],
+        "closed_or_cancelled": [{"id": r["id"], "status": r["plan"]["status"], "note": r["plan"]["note"][:120]}
+                                for r in rows if r["plan"] and r["plan"]["status"] in ("cancelled",)
+                                or (r["signal"] or {}).get("side") == "close"],
         "chart": {"reads": len(charts),
                   "stop_accepted": sum(1 for r in charts if r["chart"].get("stop_loss") is not None),
-                  "errors": sum(1 for r in charts if r["chart"].get("error"))},
+                  "review": sum(1 for r in charts if r["chart"].get("review")),
+                  "errors": sum(1 for r in charts if r["chart"].get("error")
+                                or "vision_failed" in (r["chart"].get("rejected") or []))},
         "skips": dict(skips.most_common()),
         "vs_parser_only": {"parser_acts": len(rule_acts), "still_acts": len(rule_acts & acted_ids),
                          "removed": sorted(rule_acts - acted_ids), "new": sorted(acted_ids - rule_acts)},

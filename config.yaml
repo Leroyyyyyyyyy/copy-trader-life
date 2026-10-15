@@ -6,6 +6,15 @@ dry_run: true
 llm_gate:
   enabled: true
   on_error: skip
+  samples: 3          # 三次都一致才自动执行/拦截；不一致交人工复核（python -m src.review）
+
+# 带图突破单读图：OCR 读数字，视觉按编号认标签角色；两次读图角色不一致交人工复核。
+chart:
+  mode: roles         # roles | ocr_primary
+  samples: 2
+
+review:
+  expire_sec: 43200   # 复核卡 12 小时未处理即作废
 
 risk:
   max_usd_per_trade: 50

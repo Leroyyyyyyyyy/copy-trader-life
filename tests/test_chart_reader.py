@@ -74,5 +74,26 @@ class ChartReaderValidationTests(unittest.TestCase):
             self.read_reply("", "buy")
 
 
+
+class VisionRetryTests(unittest.TestCase):
+    def test_empty_reply_is_retried_once(self):
+        from src.chart_reader import _vision_json
+
+        empty = mock.Mock(status_code=200)
+        empty.json.return_value = {"choices": [{"finish_reason": "length", "message": {"content": ""}}]}
+        good = mock.Mock(status_code=200)
+        good.json.return_value = {"choices": [{"message": {"content": '{"entry": 1}'}}], "usage": {"x": 1}}
+        client = mock.MagicMock()
+        client.post.side_effect = [empty, good, empty, empty]
+        ctx = mock.MagicMock()
+        ctx.__enter__.return_value = client
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as f, \
+                mock.patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}, clear=False), \
+                mock.patch("src.chart_reader.httpx.Client", return_value=ctx):
+            self.assertEqual(_vision_json("p", Path(f.name)), ({"entry": 1}, {"x": 1}))
+            with self.assertRaisesRegex(RuntimeError, "finish_reason=length"):
+                _vision_json("p", Path(f.name))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -20,8 +20,8 @@ from typing import Any, Optional
 
 import httpx
 
-GATE_VERSION = "llm_gate.v2"
-VERDICTS = ("enter_now", "conditional_setup", "adjust_exit", "close", "not_actionable", "unclear")
+GATE_VERSION = "llm_gate.v3"
+VERDICTS = ("enter_now", "conditional_setup", "adjust_exit", "close", "cancel_setup", "not_actionable", "unclear")
 ACTIONABLE = {"enter_now", "conditional_setup", "adjust_exit", "close"}
 
 SYSTEM = """You review posts from a crypto trading channel before a bot copies them.
@@ -34,10 +34,20 @@ position. Everything else is not actionable: commentary, opinions, stories about
 past trades, reactions to news, and statements about what the author or others
 should NOT do. Use the earlier posts only as context; judge the latest post.
 
+Two verdicts are about earlier calls: "close" when the author exits or tells
+followers to exit a position, and "cancel_setup" when the author says an earlier
+conditional setup is void, invalidated or should no longer be taken. For both,
+"symbol" is the asset of that position or setup.
+
+If the author offers several assets as alternatives and followers should take
+only one of them (e.g. "pick one of BTC or ETH"), list them in "one_of";
+otherwise "one_of" is [].
+
 Reply with ONE json object:
-{"verdict": "enter_now" | "conditional_setup" | "adjust_exit" | "close" | "not_actionable" | "unclear",
+{"verdict": "enter_now" | "conditional_setup" | "adjust_exit" | "close" | "cancel_setup" | "not_actionable" | "unclear",
  "side": "buy" | "sell" | null,
  "symbol": "<ticker as the author means it>" | null,
+ "one_of": ["<ticker>", ...],
  "reason": "<one sentence>"}"""
 
 
@@ -49,6 +59,10 @@ class GateDecision:
     symbol: Optional[str] = None
     reason: str = ""
     error: Optional[str] = None
+    one_of: list[str] = field(default_factory=list)
+    # allow | block | close | cancel | review (review_many only; review() leaves it "")
+    action: str = ""
+    samples: list[dict[str, Any]] = field(default_factory=list)
     latency_ms: float = 0.0
     version: str = GATE_VERSION
     usage: dict[str, Any] = field(default_factory=dict)
@@ -149,9 +163,70 @@ def review(
     else:
         return failed(err)
 
+    one_of = sorted({str(x).upper().lstrip("$") for x in (out.get("one_of") or []) if x})
+    p_sym = (parsed.get("symbol") or "").upper()
+    if not out.get("symbol") and p_sym in one_of:
+        out["symbol"] = p_sym  # "pick one of BTC or ETH": the model names the set, not one symbol
     allow, verdict, side, symbol, reasons = decide(out, parsed)
     return GateDecision(
-        allow=allow, verdict=verdict, side=side, symbol=symbol,
+        allow=allow, verdict=verdict, side=side, symbol=symbol, one_of=one_of,
         reason=(str(out.get("reason") or "") + (" | " + ";".join(reasons) if reasons else "")).strip(" |"),
         latency_ms=round((time.perf_counter() - t0) * 1000, 1), usage=data.get("usage") or {},
     )
+
+
+def _action(d: GateDecision, parsed: dict[str, Any]) -> tuple:
+    if d.error:
+        return ("error",)
+    if d.allow:
+        return ("allow",)
+    if d.verdict in ("close", "cancel_setup"):
+        sym = d.symbol or (parsed.get("symbol") or "").upper() or None
+        return ("close" if d.verdict == "close" else "cancel", sym)
+    return ("block",)
+
+
+def review_many(*, samples: int = 3, on_error: str = "skip", **kw: Any) -> GateDecision:
+    """Ask `samples` times in parallel. The model is not deterministic even at
+    temperature 0, so the outcome is used only when every answer agrees:
+    action = allow | block | close | cancel. Any disagreement, or alternatives
+    ("pick one of BTC or ETH") on an allowed entry, gives action = "review": a
+    human decides. If every call errors, on_error applies; a minority of errors
+    is ignored when at least two answers remain and agree."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    t0 = time.perf_counter()
+    parsed = kw["parsed"]
+    if samples <= 1:
+        ds = [review(on_error=on_error, **kw)]
+    else:
+        with ThreadPoolExecutor(max_workers=samples) as pool:
+            ds = list(pool.map(lambda _: review(on_error=on_error, **kw), range(samples)))
+    acts = [_action(d, parsed) for d in ds]
+    ok = [(a, d) for a, d in zip(acts, ds) if a[0] != "error"]
+    latency = round((time.perf_counter() - t0) * 1000, 1)
+    sample_dicts = [{k: d.to_dict()[k] for k in ("allow", "verdict", "side", "symbol", "one_of", "reason", "error")}
+                    for d in ds]
+    if not ok:
+        first = ds[0]
+        return GateDecision(allow=on_error == "allow", verdict="error", error=first.error,
+                            action="allow" if on_error == "allow" else "block",
+                            samples=sample_dicts, latency_ms=latency)
+    distinct = {a for a, _ in ok}
+    rep = ok[0][1]
+    one_of = sorted({s for _, d in ok for s in d.one_of})
+    usage: dict[str, Any] = {}
+    for d in ds:
+        for k, v in (d.usage or {}).items():
+            if isinstance(v, (int, float)):
+                usage[k] = usage.get(k, 0) + v
+    if len(distinct) > 1 or (samples > 1 and len(ok) < 2):
+        action, reason = "review", "split:" + ",".join(sorted("/".join(str(x) for x in a) for a in distinct))
+    elif ok[0][0][0] == "allow" and len(one_of) > 1:
+        action, reason = "review", "alternatives:" + ",".join(one_of)
+    else:
+        action, reason = ok[0][0][0], rep.reason
+    sym = ok[0][0][1] if ok[0][0][0] in ("close", "cancel") and len(distinct) == 1 else rep.symbol
+    return GateDecision(allow=action == "allow", verdict=rep.verdict if len(distinct) == 1 else "split",
+                        side=rep.side, symbol=sym, reason=reason, one_of=one_of, action=action,
+                        samples=sample_dicts, latency_ms=latency, usage=usage)

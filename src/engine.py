@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+import threading
 import time
 import uuid
 from collections import deque
+from dataclasses import replace
 from typing import Any, Optional
 
 from .hyperliquid_venue import HyperliquidVenue
@@ -34,6 +38,8 @@ class Engine:
         self.context: dict[str, dict[str, Any]] = {}
         self.recent_texts: dict[str, deque] = {}
         self.plans: dict[str, Plan] = {}
+        # handle_text runs in worker threads, poll_pending on the event loop: state changes take this lock.
+        self._lock = threading.RLock()
         self._next_hl_reconcile_at = 0.0
         self._hl_reconcile_interval = float(
             ((cfg.get("venues") or {}).get("hyperliquid") or {}).get("reconcile_interval_sec") or 30.0
@@ -63,31 +69,8 @@ class Engine:
             if raw.get("execution_mode") != mode:
                 log.warning("not restoring %s: stored mode=%s current=%s", pid, raw.get("execution_mode", "legacy"), mode)
                 continue
-            sig = raw.get("signal") or {}
             try:
-                signal = Signal(
-                    channel=sig["channel"],
-                    message_id=int(sig["message_id"]),
-                    date=sig.get("date") or "",
-                    text=sig.get("text") or "",
-                    side=Side(sig.get("side") or "ignore"),
-                    intent=Intent(sig.get("intent") or "ignore"),
-                    venue=Venue(sig.get("venue") or "none"),
-                    symbol=sig.get("symbol"),
-                    mint=sig.get("mint"),
-                    trigger_price=sig.get("trigger_price"),
-                    trigger_mcap=sig.get("trigger_mcap"),
-                    limit_price=sig.get("limit_price"),
-                    take_profit=sig.get("take_profit"),
-                    stop_loss=sig.get("stop_loss"),
-                    size_mult=float(sig.get("size_mult") or 1),
-                    breakout=bool(sig.get("breakout")),
-                    confirm_tf=sig.get("confirm_tf"),
-                    invalidation=sig.get("invalidation"),
-                    confidence=float(sig.get("confidence") or 0),
-                    reason=sig.get("reason") or "",
-                    skip_reason=sig.get("skip_reason"),
-                )
+                signal = self._signal_from_dict(raw.get("signal") or {})
             except Exception:
                 continue
             if signal.intent in {Intent.WAIT_TARGET, Intent.CONFIRM_BREAKOUT}:
@@ -95,6 +78,33 @@ class Engine:
                 self.plans[pid] = plan
                 self.risk.mark_pending(signal.key())
                 log.info("restored pending plan %s %s", pid, signal.key())
+
+    @staticmethod
+    def _signal_from_dict(sig: dict[str, Any]) -> Signal:
+        return Signal(
+            channel=sig["channel"],
+            message_id=int(sig["message_id"]),
+            date=sig.get("date") or "",
+            text=sig.get("text") or "",
+            side=Side(sig.get("side") or "ignore"),
+            intent=Intent(sig.get("intent") or "ignore"),
+            venue=Venue(sig.get("venue") or "none"),
+            symbol=sig.get("symbol"),
+            mint=sig.get("mint"),
+            trigger_price=sig.get("trigger_price"),
+            trigger_mcap=sig.get("trigger_mcap"),
+            limit_price=sig.get("limit_price"),
+            take_profit=sig.get("take_profit"),
+            stop_loss=sig.get("stop_loss"),
+            size_usd=sig.get("size_usd"),
+            size_mult=float(sig.get("size_mult") or 1),
+            breakout=bool(sig.get("breakout")),
+            confirm_tf=sig.get("confirm_tf"),
+            invalidation=sig.get("invalidation"),
+            confidence=float(sig.get("confidence") or 0),
+            reason=sig.get("reason") or "",
+            skip_reason=sig.get("skip_reason"),
+        )
 
     @staticmethod
     def _hl_key(coin: str) -> str:
@@ -116,6 +126,7 @@ class Engine:
             "side": signal.side.value,
             "size": result.get("sz"),
             "source": "bot",
+            "channel": signal.channel,
             "managed_exits": managed,
             "requested_exits": requested,
             "at_risk": bool(failed),
@@ -244,24 +255,35 @@ class Engine:
             signal.confidence = max(0.0, min(0.99, signal.confidence + boost))
             signal.reason = (signal.reason + f";boost:{boost:+.2f}").strip(";")
 
+        review_reasons: list[str] = []
+        review_options: dict[str, Any] = {}
         gate_cfg = self.cfg.get("llm_gate") or {}
         if (
             gate_cfg.get("enabled")
             and not signal.skip_reason
             and signal.intent in GATED_INTENTS
         ):
-            from .llm_gate import review
+            from .llm_gate import review_many
 
-            decision = review(
+            decision = review_many(
+                samples=int(gate_cfg.get("samples", 3)),
                 text=text,
                 context=context,
                 parsed={"intent": signal.intent.value, "side": signal.side.value, "symbol": signal.symbol},
                 has_image=bool(image_path),
                 on_error=str(gate_cfg.get("on_error", "skip")),
             )
-            log.info("llm gate #%s allow=%s verdict=%s %s", message_id, decision.allow, decision.verdict, decision.reason)
-            signal.reason = (signal.reason + f";llm_gate:{decision.verdict}").strip(";")
-            if not decision.allow:
+            log.info("llm gate #%s action=%s verdict=%s %s", message_id, decision.action, decision.verdict, decision.reason)
+            signal.reason = (signal.reason + f";llm_gate:{decision.action}:{decision.verdict}").strip(";")
+            if decision.action in ("close", "cancel"):
+                exited = self._exit_from_gate(signal, decision)
+                if exited is not None:
+                    return exited
+                signal.skip_reason = f"llm_gate:{decision.verdict}:nothing_held"
+                signal.intent = Intent.IGNORE
+            elif decision.action == "review":
+                review_reasons.append(f"llm_gate:{decision.reason}")
+            elif not decision.allow:
                 signal.skip_reason = f"llm_gate:{decision.verdict}" + (f":{decision.error}" if decision.error else "")
                 signal.intent = Intent.IGNORE
 
@@ -273,31 +295,39 @@ class Engine:
             and signal.symbol
             and image_path
         ):
+            chart_cfg = self.cfg.get("chart") or {}
             try:
-                from .chart_reader import read_levels
+                from .chart_reader import read_levels_detail, read_levels_roles
 
                 try:
                     ref = self.hl.mark(signal.symbol)
                 except Exception:  # noqa: BLE001 - scale check is best effort
                     ref = None
-                lv = read_levels(
-                    image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h",
-                    reference_price=ref, ocr_mode="ocr_primary",
-                )
-                if signal.trigger_price is None and lv.get("yellow_or_trigger"):
-                    signal.trigger_price = float(lv["yellow_or_trigger"])
+                tf = signal.confirm_tf or "8h"
+                if chart_cfg.get("mode", "roles") == "roles":
+                    lv = read_levels_roles(image_path, signal.symbol, signal.side.value, tf, reference_price=ref,
+                                           samples=int(chart_cfg.get("samples", 2)))
+                else:
+                    lv = read_levels_detail(image_path, signal.symbol, signal.side.value, tf,
+                                            reference_price=ref, ocr_mode="ocr_primary")
+                if signal.trigger_price is None and lv.get("entry"):
+                    signal.trigger_price = float(lv["entry"])
                 if signal.stop_loss is None and lv.get("stop_loss"):
                     signal.stop_loss = float(lv["stop_loss"])
                 if signal.take_profit is None and lv.get("take_profit"):
                     signal.take_profit = float(lv["take_profit"])
+                if lv.get("review"):
+                    review_reasons.append("chart:" + lv["review"]["reason"])
+                    review_options["chart_options"] = lv["review"]["options"]
                 signal.reason = (signal.reason + ";chart_vision").strip(";")
                 log.info(
-                    "chart vision #%s %s -> trig=%s sl=%s tp=%s",
+                    "chart vision #%s %s -> trig=%s sl=%s tp=%s rejected=%s",
                     message_id, signal.symbol, signal.trigger_price, signal.stop_loss, signal.take_profit,
+                    lv.get("rejected"),
                 )
             except Exception:
                 log.exception("chart vision failed #%s", message_id)
-            if signal.stop_loss is None and not signal.skip_reason:
+            if signal.stop_loss is None and not signal.skip_reason and not review_reasons:
                 # The chart carried the levels; without a stop that vision and OCR
                 # agree on, do not arm the setup on a proxy trigger.
                 signal.skip_reason = "chart_stop_unverified"
@@ -325,9 +355,15 @@ class Engine:
             signal.skip_reason,
             (text or "").replace("\n", " ")[:160],
         )
+        if review_reasons and not signal.skip_reason:
+            return self._hold_for_review(signal, review_reasons, review_options)
         return self.apply(signal)
 
     def apply(self, signal: Signal) -> Plan:
+        with self._lock:
+            return self._apply(signal)
+
+    def _apply(self, signal: Signal) -> Plan:
         plan = Plan(signal=signal, created_at=time.time())
         blocked = self.risk.allow(signal, updating=signal.intent in {Intent.UPDATE, Intent.CLOSE})
         if blocked:
@@ -352,6 +388,121 @@ class Engine:
             plan.signal = signal
             return self._park(plan, "solana wait for price/mcap")
         return self._fire(plan)
+
+    def _channel_holds(self, channel: str, key: str) -> bool:
+        """Does this channel own a bot position on `key`? (paper: risk state; live: store)."""
+        meta = self.risk.state.open_positions.get(key) or {}
+        if ((meta.get("signal") or {}).get("channel")) == channel:
+            return True
+        entry = self.store.position(key) or {}
+        return entry.get("source") == "bot" and entry.get("channel") == channel
+
+    def _drop_pending(self, channel: str, key: str, why: str) -> list[str]:
+        dropped = [pid for pid, p in self.plans.items()
+                   if p.status == Status.PENDING and p.signal.key() == key and p.signal.channel == channel]
+        for pid in dropped:
+            self.plans.pop(pid)
+            self.store.drop_plan(pid)
+            self.risk.clear_pending(key)
+            log.info("pending %s dropped: %s", pid, why)
+        return dropped
+
+    def _exit_from_gate(self, signal: Signal, decision: Any) -> Optional[Plan]:
+        """The author exits ("close") or voids a setup ("cancel_setup"). Act only on
+        what this channel made the bot hold: cancel its pending setups on that
+        symbol and, for close, close its position. Returns None if nothing is held."""
+        if not decision.symbol:
+            return None
+        key = self._hl_key(decision.symbol)
+        with self._lock:
+            dropped = self._drop_pending(signal.channel, key, f"{decision.verdict} #{signal.message_id}")
+            if decision.action == "close" and self._channel_holds(signal.channel, key):
+                close = replace(signal, side=Side.CLOSE, intent=Intent.CLOSE, venue=Venue.HYPERLIQUID,
+                                symbol=decision.symbol.upper(), mint=None, skip_reason=None,
+                                take_profit=None, stop_loss=None, trigger_price=None, limit_price=None)
+                plan = self._apply(close)
+                if dropped:
+                    plan.note = (plan.note + f"; cancelled pending {','.join(dropped)}").strip("; ")
+                return plan
+        if not dropped:
+            return None
+        return Plan(signal=signal, status=Status.CANCELLED, created_at=time.time(),
+                    note=f"{decision.verdict}: cancelled pending {','.join(dropped)}")
+
+    # ---- human review -------------------------------------------------------------
+    # The engine is the only writer of state.json. `python -m src.review` drops a
+    # decision file into <data>/review_inbox/; poll_pending applies it.
+
+    @property
+    def review_inbox(self) -> Path:
+        return self.store.path.parent / "review_inbox"
+
+    def _hold_for_review(self, signal: Signal, reasons: list[str], options: Optional[dict[str, Any]] = None) -> Plan:
+        with self._lock:
+            rid = str(uuid.uuid4())[:8]
+            ttl = float((self.cfg.get("review") or {}).get("expire_sec") or 12 * 3600)
+            now = time.time()
+            self.store.data.setdefault("reviews", {})[rid] = {
+                "signal": signal.to_dict(), "reasons": reasons, "options": options or {},
+                "created_at": now, "expires_at": now + ttl,
+                "execution_mode": "paper" if self.dry_run else "live",
+                "pending_same_channel": [
+                    {"plan_id": pid, "symbol": p.signal.symbol, "side": p.signal.side.value,
+                     "message_id": p.signal.message_id}
+                    for pid, p in self.plans.items() if p.signal.channel == signal.channel],
+            }
+            self.store.save()
+        log.warning("REVIEW %s %s #%s %s %s: %s", rid, signal.channel, signal.message_id,
+                    signal.side.value, signal.symbol, "; ".join(reasons))
+        return Plan(signal=signal, status=Status.REVIEW, created_at=now, note=f"review {rid}: " + "; ".join(reasons))
+
+    def process_reviews(self) -> list[dict[str, Any]]:
+        inbox = self.review_inbox
+        if not inbox.exists():
+            return []
+        results = []
+        for path in sorted(inbox.glob("*.json")):
+            try:
+                cmd = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                log.exception("bad review command %s", path.name)
+                path.rename(path.with_suffix(".bad"))
+                continue
+            with self._lock:
+                result = self._apply_review(cmd)
+                self.store.data.setdefault("review_log", []).append(result)
+                self.store.save()
+            path.unlink(missing_ok=True)
+            log.info("review %s %s -> %s", cmd.get("review_id"), cmd.get("decision"), result["outcome"])
+            results.append(result)
+        return results
+
+    def _apply_review(self, cmd: dict[str, Any]) -> dict[str, Any]:
+        rid, decision = str(cmd.get("review_id")), cmd.get("decision")
+        out = {"review_id": rid, "decision": decision, "command_id": cmd.get("command_id"), "at": time.time()}
+        card = self.store.data.setdefault("reviews", {}).get(rid)
+        if card is None:
+            return {**out, "outcome": "unknown_or_done"}
+        if card.get("execution_mode") != ("paper" if self.dry_run else "live"):
+            return {**out, "outcome": "wrong_mode"}
+        if time.time() > float(card["expires_at"]):
+            self.store.data["reviews"].pop(rid)
+            return {**out, "outcome": "expired"}
+        if decision == "reject":
+            self.store.data["reviews"].pop(rid)
+            return {**out, "outcome": "rejected"}
+        if decision != "approve":
+            return {**out, "outcome": "bad_decision"}
+        signal = self._signal_from_dict(card["signal"])
+        for field_name in ("trigger_price", "stop_loss", "take_profit"):
+            if cmd.get(field_name) is not None:
+                setattr(signal, field_name, float(cmd[field_name]))
+        if signal.side in {Side.BUY, Side.SELL} and signal.intent != Intent.UPDATE and signal.stop_loss is None:
+            return {**out, "outcome": "need_stop_loss"}  # card stays open; approve again with --stop
+        self.store.data["reviews"].pop(rid)
+        signal.reason = (signal.reason + f";human_approved:{rid}").strip(";")
+        plan = self._apply(signal)  # risk checks run again on today's state
+        return {**out, "outcome": plan.status.value, "note": plan.note}
 
     def _update_exits(self, plan: Plan) -> Plan:
         signal = plan.signal
@@ -483,6 +634,7 @@ class Engine:
         return plan
 
     def poll_pending(self) -> None:
+        self.process_reviews()
         self.reconcile_hyperliquid()
         if not self.plans:
             return

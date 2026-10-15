@@ -1,6 +1,6 @@
 {
  "posts": 373,
- "acted": 13,
+ "acted": 9,
  "armed_at_end": [
   {
    "id": 7960,
@@ -22,61 +22,106 @@
    "side": "buy",
    "trigger": 0.3547,
    "stop_loss": 0.3309
-  },
-  {
-   "id": 8027,
-   "symbol": "ETH",
-   "side": "buy",
-   "trigger": 2520.54,
-   "stop_loss": 2398.12
   }
  ],
  "acted_by_status": {
-  "pending": 13
+  "pending": 9
  },
  "acted_by_intent": {
-  "confirm_breakout": 13
+  "confirm_breakout": 9
  },
  "entries_without_stop": 0,
  "gate": {
-  "calls": 38,
-  "allowed": 19,
+  "posts": 38,
+  "actions": {
+   "block": 13,
+   "allow": 18,
+   "review": 3,
+   "cancel": 2,
+   "close": 2
+  },
   "verdicts": {
-   "not_actionable": 15,
+   "not_actionable": 11,
    "conditional_setup": 21,
+   "split": 2,
+   "cancel_setup": 2,
    "close": 2
   },
   "errors": 0
  },
+ "held_for_review": [
+  {
+   "id": 7712,
+   "note": "review afcc77ce: chart:chart reads disagree"
+  },
+  {
+   "id": 7805,
+   "note": "review f4bc9b6e: chart:chart reads disagree"
+  },
+  {
+   "id": 7958,
+   "note": "review 4e72287a: llm_gate:split:block,close/ETH"
+  },
+  {
+   "id": 7983,
+   "note": "review 7c168f6a: llm_gate:split:block,close/ETH"
+  },
+  {
+   "id": 8027,
+   "note": "review 95ab3a59: llm_gate:alternatives:BTC,ETH"
+  }
+ ],
+ "closed_or_cancelled": [
+  {
+   "id": 7795,
+   "status": "skipped",
+   "note": "no_venue"
+  },
+  {
+   "id": 7970,
+   "status": "cancelled",
+   "note": "cancel_setup: cancelled pending fa973044"
+  },
+  {
+   "id": 7989,
+   "status": "skipped",
+   "note": "no_venue"
+  }
+ ],
  "chart": {
   "reads": 19,
-  "stop_accepted": 13,
-  "errors": 1
+  "stop_accepted": 10,
+  "review": 2,
+  "errors": 2
  },
  "skips": {
   "no_action": 220,
   "off_venue_asset": 49,
   "ad_or_referral": 31,
-  "llm_gate:not_actionable": 15,
+  "llm_gate:not_actionable": 11,
   "avoid_short_not_a_buy": 10,
   "no_venue": 9,
-  "chart_stop_unverified": 6,
+  "chart_stop_unverified": 7,
   "macro_or_link_only": 5,
   "spot_only": 5,
   "llm_gate:conditional_setup": 2,
   "nsfw": 2,
   "hold_existing": 2,
-  "llm_gate:close": 2,
+  "llm_gate:close:nothing_held": 2,
+  "llm_gate:cancel_setup:nothing_held": 1,
   "mixed_side": 1,
   "hold_no_order": 1
  },
  "vs_parser_only": {
   "parser_acts": 37,
-  "still_acts": 13,
+  "still_acts": 9,
   "removed": [
    7686,
    7712,
    7726,
+   7805,
+   7841,
+   7885,
    7895,
    7923,
    7958,
@@ -91,6 +136,7 @@
    7999,
    8007,
    8015,
+   8027,
    8032,
    8041,
    8043,
@@ -127,30 +173,6 @@
    "text": "ETH的機會這裡可以看看 最近消息都沒了 那就可以關注這裡了 一樣是區間內的運行 條件1:漲過黃線 條件2:8H收在上方"
   },
   {
-   "id": 7805,
-   "status": "pending",
-   "intent": "confirm_breakout",
-   "side": "buy",
-   "symbol": "BTC",
-   "trigger": 77343.44,
-   "stop_loss": 74837.87,
-   "take_profit": 90613.56,
-   "gate": "conditional_setup",
-   "text": "BTC 新的信號K在這 如果你還沒開BTC的話 你可以等等看這單 條件1:漲過黃線 條件2:8H收在上方 上頭的我想明天醒來再看看"
-  },
-  {
-   "id": 7841,
-   "status": "pending",
-   "intent": "confirm_breakout",
-   "side": "buy",
-   "symbol": "ETH",
-   "trigger": 2704.08,
-   "stop_loss": 2629.32,
-   "take_profit": null,
-   "gate": "conditional_setup",
-   "text": "ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦"
-  },
-  {
    "id": 7843,
    "status": "pending",
    "intent": "confirm_breakout",
@@ -164,18 +186,6 @@
   },
   {
    "id": 7862,
-   "status": "pending",
-   "intent": "confirm_breakout",
-   "side": "buy",
-   "symbol": "ETH",
-   "trigger": 2704.08,
-   "stop_loss": 2598.88,
-   "take_profit": null,
-   "gate": "conditional_setup",
-   "text": "幫你們把止損位置調整一下 預掛單的要記得條件很重要喔 ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦"
-  },
-  {
-   "id": 7885,
    "status": "pending",
    "intent": "confirm_breakout",
    "side": "buy",
@@ -242,22 +252,10 @@
    "symbol": "PONS",
    "trigger": 0.3547,
    "stop_loss": 0.3309,
-   "take_profit": 0.747,
-   "gate": "conditional_setup",
-   "text": "關於PONS 我覺得有一個合約的機會 你們可以小倉試試看 PONS我還是建議盡量現貨為主的 別上頭哦 條件1:漲過黃線 條件2:6H收線在上方 OURBIT也可以玩PONS合約哦: https://www.ourbit.com/zh-TW/"
-  },
-  {
-   "id": 8027,
-   "status": "pending",
-   "intent": "confirm_breakout",
-   "side": "buy",
-   "symbol": "ETH",
-   "trigger": 2520.54,
-   "stop_loss": 2398.12,
    "take_profit": null,
    "gate": "conditional_setup",
-   "text": "ETH目前多觀察了幾天 這機會是可以的 你如果覺得BTC不喜歡 想做ETH 那你可以看看這單 BTC ETH選一個開就好 條件1:漲過黃線 條件2:8H收過上方 耐心嘿"
+   "text": "關於PONS 我覺得有一個合約的機會 你們可以小倉試試看 PONS我還是建議盡量現貨為主的 別上頭哦 條件1:漲過黃線 條件2:6H收線在上方 OURBIT也可以玩PONS合約哦: https://www.ourbit.com/zh-TW/"
   }
  ],
- "minutes": 6.5
+ "minutes": 20.9
 }

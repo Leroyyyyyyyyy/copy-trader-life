@@ -116,9 +116,11 @@ python -m src.lab.cli evaluate --model deepseek --out experiments/reports/f7_dee
 
 Lab 的 DeepSeek 适配器（`src/lab/models/provider.py`）只从 `.env` 读取 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、可选 `DEEPSEEK_LAB_MODEL`（默认 `deepseek-flash`）三行，不把整份 `.env` 载入进程环境。
 
-图表读图（`src/chart_reader.py`）在引擎里用 `ocr_primary`：价位数字取自 tesseract OCR（`src/chart_ocr.py`，同一读数至少 3 个预处理变体一致），DeepSeek 视觉只用来确认哪个标签是入场、哪个是止损；止损必须是最外侧的红色标签且离视觉读数最近，否则该带图突破单不建计划（`chart_stop_unverified`）。需要本机安装 tesseract（macOS：`brew install tesseract`）；未安装时一律不采用读图价位。读图评测：`python -m src.lab.experiments.chart_eval`，留出集加 `--heldout experiments/fixtures/charts/popi_2026_h1_heldout_labels.json`（标准答案 `experiments/fixtures/charts/`，图片在被忽略的 `data/lab/popi_images/`）。
+图表读图（`src/chart_reader.py` 的 `read_levels_roles`，`config.yaml` 的 `chart`）：tesseract OCR（`src/chart_ocr.py`）读出右侧价格轴上每个彩色标签的数字，DeepSeek 视觉只按编号指出哪个是入场、止损、止盈、当前价，并行读 2 次。两次角色不一致 → 交人工复核；任一次失败（空回复重试 1 次后）→ 不采用。止损必须是位置最外侧、至少 3 个预处理变体读数一致的红色标签，否则该带图突破单不建计划（`chart_stop_unverified`）。需要本机安装 tesseract（macOS：`brew install tesseract`）。读图评测：`python -m src.lab.experiments.chart_eval`（`--roles` 跑当前读法），留出集加 `--heldout experiments/fixtures/charts/popi_2026_h1_heldout_labels.json`（标准答案 `experiments/fixtures/charts/`，图片在被忽略的 `data/lab/popi_images/`）。
 
-LLM 闸门（`src/llm_gate.py`）：规则解析器判出要下单/改单/平仓后、读图之前，DeepSeek 读这条消息和频道前 6 条，判断作者是在叫人交易（`enter_now` / `conditional_setup` / `adjust_exit` / `close`）还是在复盘、炫耀、评论（`not_actionable`）；方向、币种也要与解析器一致才放行，出错默认不放行。配置 `config.yaml` 的 `llm_gate: {enabled, on_error}`；模型取 `DEEPSEEK_GATE_MODEL`，否则同 lab。评测：`python -m src.lab.experiments.gate_eval --repeats 3`（标准答案 `experiments/fixtures/gate/`）。
+LLM 闸门（`src/llm_gate.py`）：规则解析器判出要下单/改单/平仓后、读图之前，DeepSeek 读这条消息和频道前 6 条，并行判断 3 次（`llm_gate.samples`）：作者是在叫人交易（`enter_now` / `conditional_setup` / `adjust_exit`）、平仓（`close`）、作废之前的条件单（`cancel_setup`），还是在复盘、炫耀、评论（`not_actionable`）。3 次一致才自动执行；不一致，或作者给的是“二选一”（`one_of`），交人工复核。`close` / `cancel_setup` 只作用于本频道让机器人持有的仓位和挂单：平掉仓位、撤掉挂单。出错默认不放行。
+
+人工复核：`python -m src.review list|show <id>|approve <id> [--stop P --trigger P --tp P]|reject <id>`。引擎是 `state.json` 唯一的写入者；复核工具只读它，把决定写进 `data/review_inbox/`，引擎下次轮询时应用（风控重新检查，入场单没有止损要先补 `--stop`，过期 12 小时作废）。评测：`python -m src.lab.experiments.gate_eval --votes 3`（逐次稳定性用 `--repeats 3`）（标准答案 `experiments/fixtures/gate/`）。
 
 整链路月度重放：`python -m src.lab.experiments.engine_replay`（纸交易 Engine，不连接交易所，状态与日志写到 `data/lab/engine_replay/`；需要先有 `data/lab/popigogo_30d.json`、`data/lab/popi_images/`、`data/lab/hl_universe.json`）。
 

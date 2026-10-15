@@ -5,7 +5,9 @@ from unittest import mock
 
 import httpx
 
-from src.llm_gate import review
+import threading
+
+from src.llm_gate import review, review_many
 
 PARSED_SHORT = {"intent": "market", "side": "sell", "symbol": "BTC"}
 
@@ -94,6 +96,69 @@ class LlmGateTests(unittest.TestCase):
     def test_garbage_verdict_is_unclear_and_blocks(self):
         d = self.run_gate({"verdict": "maybe", "side": "sell", "symbol": "BTC"})
         self.assertEqual((d.allow, d.verdict), (False, "unclear"))
+
+
+
+def seq_transport(replies):
+    """Serve replies in order (None = HTTP 500), safely across the parallel samples."""
+    lock, it = threading.Lock(), iter(replies)
+
+    def handler(request):
+        with lock:
+            reply = next(it)
+        if reply is None:
+            return httpx.Response(500, text="err")
+        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(reply)}}]})
+    return httpx.MockTransport(handler)
+
+
+class ReviewManyTests(unittest.TestCase):
+    PARSED = {"intent": "confirm_breakout", "side": "buy", "symbol": "ETH"}
+    SETUP = {"verdict": "conditional_setup", "side": "buy", "symbol": "ETH", "one_of": []}
+    BRAG = {"verdict": "not_actionable", "side": None, "symbol": None, "one_of": []}
+
+    def setUp(self):
+        patcher = mock.patch.dict(os.environ, {"DEEPSEEK_API_KEY": "sk-test-000000000000000000"}, clear=False)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def many(self, replies, parsed=None, **kw):
+        return review_many(text="t", context=[], parsed=parsed or self.PARSED, retries=0,
+                           transport=seq_transport(replies), **kw)
+
+    def test_unanimous_allow(self):
+        d = self.many([self.SETUP] * 3)
+        self.assertEqual((d.action, d.allow, len(d.samples)), ("allow", True, 3))
+
+    def test_split_goes_to_review(self):
+        # POPIGOGO #7048 style: 2 of 3 say adjust, 1 says not actionable
+        d = self.many([self.SETUP, self.BRAG, self.SETUP])
+        self.assertEqual((d.action, d.allow), ("review", False))
+        self.assertTrue(d.reason.startswith("split:"))
+
+    def test_unanimous_close_names_the_symbol(self):
+        close = {"verdict": "close", "side": "sell", "symbol": None, "one_of": []}
+        d = self.many([close, dict(close, side="buy"), close], parsed={"intent": "market", "side": "buy", "symbol": "ETH"})
+        self.assertEqual((d.action, d.symbol), ("close", "ETH"))
+
+    def test_alternatives_go_to_review(self):
+        # POPIGOGO #8027: "BTC ETH 選一個開就好"
+        d = self.many([dict(self.SETUP, one_of=["BTC", "ETH"])] + [self.SETUP] * 2)
+        self.assertEqual(d.action, "review")
+        self.assertEqual(d.one_of, ["BTC", "ETH"])
+
+    def test_alternatives_without_a_symbol_still_go_to_review(self):
+        # #8027 as answered: symbol null, one_of [BTC, ETH]
+        d = self.many([dict(self.SETUP, symbol=None, one_of=["BTC", "ETH"])] * 3)
+        self.assertEqual(d.action, "review")
+
+    def test_all_errors_follow_on_error(self):
+        d = self.many([None] * 3)
+        self.assertEqual((d.action, d.allow, d.verdict), ("block", False, "error"))
+
+    def test_one_error_and_two_agreeing_answers(self):
+        d = self.many([None, self.SETUP, self.SETUP])
+        self.assertEqual(d.action, "allow")
 
 
 if __name__ == "__main__":

@@ -120,6 +120,65 @@ class OcrPrimaryGateTests(unittest.TestCase):
         self.assertEqual((out["entry"], out["stop_loss"], out["take_profit"]), (2704.08, 2591.85, 3504.16))
 
 
+class OcrRolesTests(unittest.TestCase):
+    """read_levels_roles: OCR numbers, vision assigns label indexes (mocked)."""
+
+    LABELS = [  # POPIGOGO #7712 layout, with the stop label read cleanly
+        {"colour": "green", "y": 46, "value": 81820.87, "votes": 5},
+        {"colour": "grey", "y": 120, "value": 79347.46, "votes": 8},
+        {"colour": "grey", "y": 180, "value": 77343.44, "votes": 6},
+        {"colour": "green", "y": 194, "value": 76861.95, "votes": 3},
+        {"colour": "red", "y": 218, "value": 76051.1, "votes": 4},
+        {"colour": "red", "y": 254, "value": 74837.87, "votes": 4},
+    ]
+    GOOD = {"is_price_chart": True, "entry": 2, "stop_loss": 5, "take_profit": 0, "current_price": 4, "misread": []}
+
+    def roles(self, replies, labels=None):
+        from src.chart_reader import read_levels_roles
+
+        it = iter(replies)
+
+        def fake(prompt, path):
+            r = next(it)
+            if isinstance(r, Exception):
+                raise r
+            return r, {"completion_tokens": 10}
+        with tempfile.NamedTemporaryFile(suffix=".png") as f:
+            Image.new("RGB", (800, 280)).save(f.name)
+            with mock.patch("src.chart_ocr.tesseract_available", return_value=True), \
+                    mock.patch("src.chart_ocr.read_axis_labels", return_value=labels or self.LABELS), \
+                    mock.patch("src.chart_reader._vision_json", side_effect=fake):
+                return read_levels_roles(f.name, "BTC", "buy", "8h", reference_price=80000.0, samples=2)
+
+    def test_agreeing_roles_take_ocr_numbers(self):
+        d = self.roles([self.GOOD, self.GOOD])
+        self.assertEqual((d["entry"], d["stop_loss"], d["take_profit"]), (77343.44, 74837.87, 81820.87))
+        self.assertIsNone(d["review"])
+
+    def test_disagreeing_samples_go_to_review(self):
+        d = self.roles([self.GOOD, dict(self.GOOD, stop_loss=4)])
+        self.assertIsNone(d["stop_loss"])
+        self.assertEqual([o["stop_loss"] for o in d["review"]["options"]], [74837.87, 76051.1])
+        self.assertEqual(d["review"]["options"][0]["fails_checks"], [])
+        self.assertIn("stop_loss:not_the_outermost_red_label", d["review"]["options"][1]["fails_checks"])
+        self.assertIn("stop_loss:is_current_price", d["review"]["options"][1]["fails_checks"])
+
+    def test_inner_red_is_never_the_stop(self):
+        # both samples point at the current-price label (#7712 failure)
+        bad = dict(self.GOOD, stop_loss=4, current_price=3)
+        d = self.roles([bad, bad])
+        self.assertIsNone(d["stop_loss"])
+        self.assertTrue(any(r.startswith("stop_label_unusable") for r in d["rejected"]))
+
+    def test_flagged_misread_is_not_used(self):
+        d = self.roles([dict(self.GOOD, misread=[5]), self.GOOD])
+        self.assertIsNone(d["stop_loss"])
+
+    def test_failed_sample_fails_closed(self):
+        d = self.roles([self.GOOD, RuntimeError("empty vision reply (finish_reason=length)")])
+        self.assertEqual((d["stop_loss"], d["rejected"]), (None, ["vision_failed"]))
+
+
 @unittest.skipUnless(tesseract_available(), "tesseract not installed")
 class OcrTests(unittest.TestCase):
     def test_reads_coloured_axis_labels(self):
