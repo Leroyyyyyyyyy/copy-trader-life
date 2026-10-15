@@ -245,7 +245,13 @@ class Engine:
             try:
                 from .chart_reader import read_levels
 
-                lv = read_levels(image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h")
+                try:
+                    ref = self.hl.mark(signal.symbol)
+                except Exception:  # noqa: BLE001 - scale check is best effort
+                    ref = None
+                lv = read_levels(
+                    image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h", reference_price=ref
+                )
                 if signal.trigger_price is None and lv.get("yellow_or_trigger"):
                     signal.trigger_price = float(lv["yellow_or_trigger"])
                 if signal.stop_loss is None and lv.get("stop_loss"):
