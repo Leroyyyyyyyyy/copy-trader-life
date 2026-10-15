@@ -62,6 +62,49 @@ def _agrees(a: Optional[float], b: Optional[float]) -> bool:
     return a is not None and b is not None and abs(a - b) / b <= AGREE_TOL
 
 
+# In "ocr_primary" mode the vision read only has to land this close to the OCR
+# label it is confirming (fixed before the held-out check, not tuned on it).
+ROLE_TOL = 0.01
+# OCR is the source of the number in that mode, so it must be a confident read.
+OCR_PRIMARY_MIN_VOTES = 3
+
+
+def _nearest(value: Optional[float], candidates: list[float]) -> Optional[float]:
+    if value is None or not candidates:
+        return None
+    return min(candidates, key=lambda c: abs(c - value))
+
+
+def ocr_primary_gate(
+    levels: dict[str, Any], ocr: dict[str, Any]
+) -> tuple[dict[str, Optional[float]], list[str]]:
+    """Numbers from OCR; the vision read only confirms which label is which.
+
+    Entry: the grey/blue OCR label nearest the vision entry, within ROLE_TOL.
+    Stop: the outermost red OCR label, which must also be the red label nearest the
+    vision stop, within ROLE_TOL. Target: nearest green label within ROLE_TOL, else
+    none. Fails closed if entry or stop is unconfirmed.
+    """
+    reasons: list[str] = []
+    entry_v, stop_v, target_v = levels.get("entry"), levels.get("stop_loss"), levels.get("take_profit")
+    entry = _nearest(entry_v, ocr["entry_candidates"])
+    if entry is None or abs(entry - entry_v) / entry > ROLE_TOL:
+        reasons.append(f"entry_role_unconfirmed:vision={entry_v},ocr={ocr['entry_candidates']}")
+        entry = None
+    stop = ocr["stop_loss"]
+    near = _nearest(stop_v, ocr.get("stop_candidates") or [])
+    if stop is None or near != stop or abs(stop - stop_v) / stop > ROLE_TOL:
+        reasons.append(f"stop_role_unconfirmed:vision={stop_v},ocr={stop}")
+        stop = None
+    if entry is None or stop is None:
+        return {"entry": None, "stop_loss": None, "take_profit": None}, reasons
+    target = _nearest(target_v, ocr["target_candidates"])
+    if target is not None and abs(target - target_v) / target > ROLE_TOL:
+        reasons.append(f"target_role_unconfirmed:vision={target_v}")
+        target = None
+    return {"entry": entry, "stop_loss": stop, "take_profit": target}, reasons
+
+
 def ocr_gate(levels: dict[str, Any], ocr: dict[str, Any]) -> tuple[dict[str, Optional[float]], list[str]]:
     """Keep entry/stop only if OCR read the same number; target is optional.
 
@@ -121,6 +164,7 @@ def read_levels_detail(
     timeframe: str = "8h",
     reference_price: Optional[float] = None,
     require_ocr: bool = False,
+    ocr_mode: Optional[str] = None,
 ) -> dict[str, Any]:
     """Vision read plus validation. `reference_price` is the symbol's current mark;
     when given, a chart on a different price scale is rejected. With `require_ocr`,
@@ -195,18 +239,21 @@ def read_levels_detail(
         if (side == "buy" and out["take_profit"] <= entry) or (side != "buy" and out["take_profit"] >= entry):
             out["take_profit"] = None
             rejected.append("target_on_wrong_side")
+    mode = ocr_mode or ("agree" if require_ocr else None)
     ocr_info: Optional[dict[str, Any]] = None
-    if require_ocr and any(out[k] is not None for k in ("entry", "stop_loss", "take_profit")):
+    if mode and any(out[k] is not None for k in ("entry", "stop_loss", "take_profit")):
         from .chart_ocr import ocr_levels, read_axis_labels, tesseract_available
 
         if not tesseract_available():
             out.update(entry=None, stop_loss=None, take_profit=None)
             rejected.append("ocr_unavailable")
         else:
-            ocr_info = ocr_levels(read_axis_labels(path), side)
-            gated, why = ocr_gate(out, ocr_info)
-            out.update(gated)
+            ocr_info = ocr_levels(read_axis_labels(path), side,
+                                  min_votes=OCR_PRIMARY_MIN_VOTES if mode == "ocr_primary" else 1)
+            gated, why = (ocr_primary_gate if mode == "ocr_primary" else ocr_gate)(out, ocr_info)
             rejected.extend(why)
+            rejected.extend(_post_checks(gated, side, out.get("current_price"), reference_price))
+            out.update(gated)
     return {
         **out,
         "raw": raw,
@@ -218,6 +265,30 @@ def read_levels_detail(
     }
 
 
+def _post_checks(
+    levels: dict[str, Optional[float]], side: str, current: Optional[float], reference: Optional[float]
+) -> list[str]:
+    """Re-run the side/current-price/scale checks on the gated (possibly OCR) values."""
+    why: list[str] = []
+    entry, stop, target = levels["entry"], levels["stop_loss"], levels["take_profit"]
+    if entry is None or stop is None:
+        return why
+    long = side == "buy"
+    bad = (
+        (long and stop >= entry) or (not long and stop <= entry)
+        or (current is not None and abs(stop - current) / current <= CURRENT_PRICE_TOL)
+        or (reference and abs(entry - reference) / reference > SCALE_TOL)
+    )
+    if bad:
+        levels.update(entry=None, stop_loss=None, take_profit=None)
+        why.append("post_check_failed")
+        return why
+    if target is not None and ((long and target <= entry) or (not long and target >= entry)):
+        levels["take_profit"] = None
+        why.append("target_on_wrong_side")
+    return why
+
+
 def read_levels(
     image_path: str | Path,
     symbol: str,
@@ -225,7 +296,8 @@ def read_levels(
     timeframe: str = "8h",
     reference_price: Optional[float] = None,
     require_ocr: bool = False,
+    ocr_mode: Optional[str] = None,
 ) -> dict[str, Optional[float]]:
     """Return {"yellow_or_trigger", "stop_loss", "take_profit"} (floats or None)."""
-    d = read_levels_detail(image_path, symbol, side, timeframe, reference_price, require_ocr)
+    d = read_levels_detail(image_path, symbol, side, timeframe, reference_price, require_ocr, ocr_mode)
     return {"yellow_or_trigger": d["entry"], "stop_loss": d["stop_loss"], "take_profit": d["take_profit"]}

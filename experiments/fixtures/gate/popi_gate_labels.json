@@ -1,0 +1,378 @@
+{
+ "version": "popi_gate.v1",
+ "labeled_by": "Claude, 2026-10-15; please review the ambiguous ones",
+ "question": "Should a copy-trading bot act on this post as the parser read it (same side and symbol)?",
+ "labels": [
+  {
+   "set": "month_2026_09",
+   "id": 7686,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7712,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7726,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7735,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7742,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7805,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7841,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7843,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7862,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7885,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7895,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7923,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7947,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7952,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "author offers the setup but says he won't open it himself"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7958,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7960,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "author offers the setup but says he won't open it himself"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7967,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7970,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "text says this setup is invalidated and never triggered"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7972,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "brag after a listing-news screenshot"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7977,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "text says this setup is invalidated and never triggered"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7983,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7985,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "author closes his ETH long; parser read a buy"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7990,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7995,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7996,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7999,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "DeFi project shill, not a perp call"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8001,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8007,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8015,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8027,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8032,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8041,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "author closed his ETH long; parser read a buy"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8043,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "says longing BTC is better; parser read ETH"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8060,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "plan with numbered zones but no entry now"
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8081,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8089,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8092,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 4952,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "'buy point buy point' on a pullback; spot-ish"
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5702,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5718,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5822,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "suggests buying tomorrow; author bought some spot"
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5869,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6014,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6059,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6190,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6325,
+   "should_act": false,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6361,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6850,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "advice to wait 7 days or buy 10-20% now"
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7048,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "author's exit level for his BTC short (adjust exit)"
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7154,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7217,
+   "should_act": true,
+   "ambiguous": false,
+   "note": ""
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7383,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "take-profit to 3000 is for ETH, parser said BTC"
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7408,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "target 3000-3250 is for ETH, parser said BTC"
+  }
+ ]
+}

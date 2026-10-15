@@ -10,7 +10,7 @@ from unittest import mock
 from PIL import Image, ImageDraw, ImageFont
 
 from src.chart_ocr import ocr_levels, read_axis_labels, tesseract_available
-from src.chart_reader import ocr_gate, read_levels_detail
+from src.chart_reader import ocr_gate, ocr_primary_gate, read_levels_detail
 
 OCR = {"stop_loss": 2598.88, "entry_candidates": [2704.08], "target_candidates": [3504.16, 2648.76]}
 
@@ -70,6 +70,39 @@ class GateTests(unittest.TestCase):
             d = read_levels_detail(f.name, "ETH", "buy", "8h", require_ocr=True)
         self.assertEqual((d["entry"], d["stop_loss"]), (None, None))
         self.assertIn("ocr_unavailable", d["rejected"])
+
+
+class OcrPrimaryGateTests(unittest.TestCase):
+    OCR = {"stop_loss": 2525.66, "stop_candidates": [2572.76, 2525.66],
+           "entry_candidates": [2584.74], "target_candidates": []}
+
+    def test_ocr_number_wins_when_vision_confirms_role(self):
+        # POPIGOGO #7970: vision stop 2538.6 (wrong digits), OCR 2525.66 (right).
+        out, why = ocr_primary_gate({"entry": 2584.74, "stop_loss": 2538.6, "take_profit": None}, self.OCR)
+        self.assertEqual((out["entry"], out["stop_loss"]), (2584.74, 2525.66))
+        self.assertEqual(why, [])
+
+    def test_vision_far_from_ocr_fails_closed(self):
+        # POPIGOGO #7841: 2679.32 vs 2629.32 is 1.9%, outside the 1% role window.
+        out, why = ocr_primary_gate({"entry": 2704.08, "stop_loss": 2679.32, "take_profit": None},
+                                    {"stop_loss": 2629.32, "stop_candidates": [2692.73, 2629.32],
+                                     "entry_candidates": [2704.08], "target_candidates": []})
+        self.assertIsNone(out["stop_loss"])
+        self.assertTrue(why[0].startswith("stop_role_unconfirmed"))
+
+    def test_outermost_red_must_be_the_one_vision_points_at(self):
+        # Short with an extra red level label above the stop (POPIGOGO #6190 style).
+        ocr = {"stop_loss": 75868.37, "stop_candidates": [75868.37, 71552.26, 68633.18],
+               "entry_candidates": [72849.99, 68792.95], "target_candidates": [60342.55]}
+        out, why = ocr_primary_gate({"entry": 68792.95, "stop_loss": 71552.26, "take_profit": 60342.55}, ocr)
+        self.assertIsNone(out["stop_loss"])
+
+    def test_entry_takes_nearest_grey_label(self):
+        # POPIGOGO #7843: vision picked another line (2687.65) for entry; grey label is 2704.08.
+        out, _ = ocr_primary_gate({"entry": 2687.65, "stop_loss": 2591.85, "take_profit": 3504.16},
+                                  {"stop_loss": 2591.85, "stop_candidates": [2591.85],
+                                   "entry_candidates": [2704.08], "target_candidates": [3504.16]})
+        self.assertEqual((out["entry"], out["stop_loss"], out["take_profit"]), (2704.08, 2591.85, 3504.16))
 
 
 @unittest.skipUnless(tesseract_available(), "tesseract not installed")

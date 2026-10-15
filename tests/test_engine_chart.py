@@ -27,6 +27,8 @@ class ChartVisionPathTests(unittest.TestCase):
         # in-memory store: no cross-run seen collisions, no disk writes
         self.eng.store.data["seen"] = []
         self.eng.store.save = mock.Mock()
+        # the LLM gate has its own tests; keep these offline
+        self.eng.cfg = {**self.eng.cfg, "llm_gate": {"enabled": False}}
 
     def test_chart_vision_fills_trigger_and_tp_keeps_text_sl(self):
         with mock.patch("src.chart_reader.read_levels", return_value={
@@ -58,6 +60,32 @@ class ChartVisionPathTests(unittest.TestCase):
                                         image_path="data/charts/orig_7217.jpg")
         self.assertEqual(plan.signal.skip_reason, "chart_stop_unverified")
         self.assertEqual(plan.signal.intent, Intent.IGNORE)
+
+    def test_llm_gate_blocks_a_brag(self):
+        from src.llm_gate import GateDecision
+
+        self.eng.cfg = {**self.eng.cfg, "llm_gate": {"enabled": True}}
+        brag = "ETH 到我的絕殺買點 說過我有內線了 你們不信"
+        with mock.patch("src.llm_gate.review", return_value=GateDecision(allow=False, verdict="not_actionable")) as gate:
+            plan = self.eng.handle_text("POPIGOGO", 7301, "2026-10-01T00:00:00+00:00", brag)
+        gate.assert_called_once()
+        self.assertEqual(gate.call_args.kwargs["parsed"]["intent"], "market")
+        self.assertEqual(plan.signal.skip_reason, "llm_gate:not_actionable")
+        self.assertEqual(plan.signal.intent, Intent.IGNORE)
+
+    def test_llm_gate_passes_a_setup_with_context(self):
+        from src.llm_gate import GateDecision
+
+        self.eng.cfg = {**self.eng.cfg, "llm_gate": {"enabled": True}}
+        self.eng.handle_text("POPIGOGO", 7302, "", "嘿嘿嘿")
+        with mock.patch("src.llm_gate.review",
+                        return_value=GateDecision(allow=True, verdict="conditional_setup", side="buy", symbol="ETH")) as gate:
+            plan = self.eng.handle_text("POPIGOGO", 7303, "2026-08-19T15:13:24+00:00", ETH_LONG)
+        kwargs = gate.call_args.kwargs
+        self.assertEqual(kwargs["context"], ["嘿嘿嘿"])
+        self.assertEqual(kwargs["parsed"]["intent"], "confirm_breakout")
+        self.assertEqual(plan.signal.intent, Intent.CONFIRM_BREAKOUT)
+        self.assertIn("llm_gate:conditional_setup", plan.signal.reason)
 
     def test_no_image_uses_proxy(self):
         plan = self.eng.handle_text("POPIGOGO", 7218, "2026-08-19T15:13:24+00:00", ETH_LONG)

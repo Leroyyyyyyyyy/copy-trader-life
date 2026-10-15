@@ -1,0 +1,5187 @@
+{
+ "gate_version": "llm_gate.v2+rescored",
+ "repeats": 3,
+ "completion_tokens": 76063,
+ "summary": {
+  "month_2026_09/all": {
+   "cases": 37,
+   "runs": 111,
+   "correct": 111,
+   "wrong_allow": 0,
+   "wrong_block": 0,
+   "errors": 0,
+   "unstable_cases": [],
+   "should_act_cases": 19
+  },
+  "month_2026_09/unambiguous": {
+   "cases": 29,
+   "runs": 87,
+   "correct": 87,
+   "wrong_allow": 0,
+   "wrong_block": 0,
+   "errors": 0,
+   "unstable_cases": [],
+   "should_act_cases": 13
+  },
+  "older_2025_10_2026_08/all": {
+   "cases": 16,
+   "runs": 48,
+   "correct": 47,
+   "wrong_allow": 0,
+   "wrong_block": 1,
+   "errors": 0,
+   "unstable_cases": [
+    7048
+   ],
+   "should_act_cases": 9
+  },
+  "older_2025_10_2026_08/unambiguous": {
+   "cases": 11,
+   "runs": 33,
+   "correct": 32,
+   "wrong_allow": 0,
+   "wrong_block": 1,
+   "errors": 0,
+   "unstable_cases": [
+    7048
+   ],
+   "should_act_cases": 8
+  }
+ },
+ "rows": [
+  {
+   "set": "month_2026_09",
+   "id": 7686,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "現在價格都在區間底部 我是不太會去做空才對 真的有利可圖的話 那就另當別論了",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only giving his opinion that he wouldn't short at the bottom of the range, which is commentary about what he won't do, not an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2645.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 584,
+      "completion_tokens": 277,
+      "total_tokens": 861,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 217
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only saying he wouldn't short at the bottom of the range, which is commentary about what he won't do rather than an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2147.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 584,
+      "completion_tokens": 200,
+      "total_tokens": 784,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 143
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is merely commenting that he personally wouldn't short at the bottom of the range, with no instruction or conditional entry given to followers. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1596.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 584,
+      "completion_tokens": 151,
+      "total_tokens": 735,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 98
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7712,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "BTC 新的信號K在這 如果你還沒開BTC的話 你可以等等看這單 條件1:漲過黃線 條件2:8H收在上方 上頭的我想明天醒來再看看",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author tells followers who haven't entered BTC to wait for a new signal setup with two stated conditions before entering.",
+     "error": null,
+     "latency_ms": 2210.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 712,
+      "completion_tokens": 226,
+      "total_tokens": 938,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 177
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author tells followers who haven't entered BTC to wait for this setup with two stated conditions (break above the yellow line and an 8H close above it).",
+     "error": null,
+     "latency_ms": 1545.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 712,
+      "completion_tokens": 133,
+      "total_tokens": 845,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 74
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The author tells those not already in BTC to wait for this setup with stated conditions: break above the yellow line and an 8H close above it.",
+     "error": null,
+     "latency_ms": 2479.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 712,
+      "completion_tokens": 249,
+      "total_tokens": 961,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 198
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 200
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7726,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH的機會這裡可以看看 最近消息都沒了 那就可以關注這裡了 一樣是區間內的運行 條件1:漲過黃線 條件2:8H收在上方",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author points to an ETH setup with two stated conditions (break above the yellow line and an 8H close above it) before considering entry.",
+     "error": null,
+     "latency_ms": 1632.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 792,
+      "completion_tokens": 108,
+      "total_tokens": 900,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 52
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author gives two conditions to watch for an ETH long entry, so it is a conditional setup rather than an immediate trade.",
+     "error": null,
+     "latency_ms": 2586.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 792,
+      "completion_tokens": 259,
+      "total_tokens": 1051,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 208
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author outlines a long setup for ETH with conditions to watch for a breakout above the yellow line and an 8H close above it.",
+     "error": null,
+     "latency_ms": 2335.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 792,
+      "completion_tokens": 224,
+      "total_tokens": 1016,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 169
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7735,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH的機會這裡可以看看 最近消息都沒了 那就可以關注這裡了 一樣是區間內的運行 條件1:漲過黃線 條件2:8H收在上方",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author outlines a conditional ETH breakout setup requiring a move above the yellow line and an 8H close above it, rather than instructing an immediate trade.",
+     "error": null,
+     "latency_ms": 2412.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 522,
+      "completion_tokens": 238,
+      "total_tokens": 760,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 186
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 138
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells followers to watch ETH with two stated conditions (break above the yellow line and an 8H close above it) before entering, which is a conditional setup rather than an immediate entry.",
+     "error": null,
+     "latency_ms": 1511.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 522,
+      "completion_tokens": 157,
+      "total_tokens": 679,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 91
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 138
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "作者為 ETH 設定了明確的條件式進場（漲過黃線且 8 小時收在上方），屬於等待條件的布局指示。",
+     "error": null,
+     "latency_ms": 1442.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 522,
+      "completion_tokens": 121,
+      "total_tokens": 643,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 61
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 138
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7742,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH的機會這裡可以看看 最近消息都沒了 那就可以關注這裡了 一樣是區間內的運行 條件1:漲過黃線 條件2:8H收在上方",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author gives conditional ETH setup requiring a break above the yellow line and an 8H close above it before entry, not an immediate trade.",
+     "error": null,
+     "latency_ms": 2349.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 515,
+      "completion_tokens": 252,
+      "total_tokens": 767,
+      "prompt_tokens_details": {
+       "cached_tokens": 381
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 197
+      },
+      "prompt_cache_hit_tokens": 381,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author outlines a conditional ETH long setup requiring a break above the yellow line and an 8H close above it.",
+     "error": null,
+     "latency_ms": 2577.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 515,
+      "completion_tokens": 258,
+      "total_tokens": 773,
+      "prompt_tokens_details": {
+       "cached_tokens": 381
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 215
+      },
+      "prompt_cache_hit_tokens": 381,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author states two conditions for an ETH breakout entry rather than telling followers to enter now.",
+     "error": null,
+     "latency_ms": 2202.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 515,
+      "completion_tokens": 266,
+      "total_tokens": 781,
+      "prompt_tokens_details": {
+       "cached_tokens": 381
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 229
+      },
+      "prompt_cache_hit_tokens": 381,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7805,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "BTC 新的信號K在這 如果你還沒開BTC的話 你可以等等看這單 條件1:漲過黃線 條件2:8H收在上方 上頭的我想明天醒來再看看",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives two stated entry conditions (break above the yellow line, 8H close above it) for a BTC long if not already in.",
+     "error": null,
+     "latency_ms": 1522.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 470,
+      "completion_tokens": 147,
+      "total_tokens": 617,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 91
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 214
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives a stated conditional entry for BTC (break above yellow line plus 8H close above) for those not yet in.",
+     "error": null,
+     "latency_ms": 1411.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 470,
+      "completion_tokens": 132,
+      "total_tokens": 602,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 79
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 214
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author tells those not yet in BTC to wait for a stated conditional entry — price above the yellow line plus an 8H close above it.",
+     "error": null,
+     "latency_ms": 1309.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 470,
+      "completion_tokens": 136,
+      "total_tokens": 606,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 80
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 214
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7841,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author invites those who missed ETH to watch this setup with two explicit trigger conditions (price above the yellow line and an 8H close above it) before entering.",
+     "error": null,
+     "latency_ms": 1679.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 449,
+      "completion_tokens": 155,
+      "total_tokens": 604,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 95
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 193
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH sidelined traders to watch this post-breakout pullback and enter only if price rises above the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 1868.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 449,
+      "completion_tokens": 158,
+      "total_tokens": 607,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 96
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 193
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH sidelined traders to watch for a breakout-pullback long with two explicit entry conditions (price above yellow line + 8H close above), a stated conditional entry.",
+     "error": null,
+     "latency_ms": 2289.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 449,
+      "completion_tokens": 251,
+      "total_tokens": 700,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 187
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 193
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7843,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author invites ETH onlookers to watch this long setup and enter only if price rises above the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 1666.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 492,
+      "completion_tokens": 180,
+      "total_tokens": 672,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 122
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 236
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH sideliners to watch this breakout-pullback setup and enter only if price rises above the yellow line and the 8H candle closes above it, a stated conditional entry.",
+     "error": null,
+     "latency_ms": 1671.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 492,
+      "completion_tokens": 143,
+      "total_tokens": 635,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 78
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 236
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH latecomers to watch for a breakout-pullback entry, but only if two stated conditions (rise above yellow line, 8H close above it) are met.",
+     "error": null,
+     "latency_ms": 1833.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 492,
+      "completion_tokens": 161,
+      "total_tokens": 653,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 96
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 236
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7862,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "幫你們把止損位置調整一下 預掛單的要記得條件很重要喔 ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author lays out a breakout-pullback long setup on ETH with two stated conditions (break above the yellow line and an 8H close above it) for followers to enter once triggered.",
+     "error": null,
+     "latency_ms": 3342.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 609,
+      "completion_tokens": 371,
+      "total_tokens": 980,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 305
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author invites followers to prepare a conditional breakout-retest entry in ETH, valid only if price clears the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 1962.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 609,
+      "completion_tokens": 211,
+      "total_tokens": 820,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 152
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author tells followers to watch an ETH breakout-retest entry that only triggers if price rises above the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 4691.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 609,
+      "completion_tokens": 603,
+      "total_tokens": 1212,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 544
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7885,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "幫你們把止損位置調整一下 預掛單的要記得條件很重要喔 ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH sideliners to watch for a long entry only if price rises above the yellow line and the 8H candle closes above it after the breakout pullback.",
+     "error": null,
+     "latency_ms": 13194.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 1913,
+      "total_tokens": 2457,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1859
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH onlookers to watch this breakout pullback and enter only if the two stated conditions (rise above yellow line, 8H close above) are met, with a brief note about adjusting stops.",
+     "error": null,
+     "latency_ms": 4063.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 527,
+      "total_tokens": 1071,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 457
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author tells sidelined ETH watchers to watch a post-breakout pullback and enter only if two stated conditions are met (price above the yellow line and an 8H close above it).",
+     "error": null,
+     "latency_ms": 3028.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 313,
+      "total_tokens": 857,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 245
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7895,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "幫你們把止損位置調整一下 預掛單的要記得條件很重要喔 ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH followers to watch a post-breakout pullback and enter only if price rises above the yellow line and the 8H candle closes above it, a stated conditional long setup.",
+     "error": null,
+     "latency_ms": 10943.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 868,
+      "completion_tokens": 1605,
+      "total_tokens": 2473,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1539
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 228
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH latecomers to watch this setup and enter only if two conditions are met (break above yellow line and 8H close above it), a stated conditional entry plan.",
+     "error": null,
+     "latency_ms": 4671.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 868,
+      "completion_tokens": 629,
+      "total_tokens": 1497,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 565
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 228
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author tells ETH sidelined traders to watch this breakout-retest setup and enter only if price rises above the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 3724.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 868,
+      "completion_tokens": 468,
+      "total_tokens": 1336,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 407
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 228
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7923,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "如果你在這裡做空的話 那你真的要變成韭菜了",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is warning that shorting here would make you a loser, not instructing followers to enter or exit a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3167.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 619,
+      "completion_tokens": 331,
+      "total_tokens": 950,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 286
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 235
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post merely warns that shorting here would make you a sucker—a statement about what not to do—without instructing followers to enter, adjust, or close any trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1974.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 619,
+      "completion_tokens": 187,
+      "total_tokens": 806,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 125
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 235
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is warning followers against shorting here, which is advice on what NOT to do rather than an instruction to take a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1441.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 619,
+      "completion_tokens": 140,
+      "total_tokens": 759,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 88
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 235
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7947,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "setup reposted with an adjusted stop",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "幫你們把止損位置調整一下 預掛單的要記得條件很重要喔 ETH的踏空者們 我覺得可以關注這單的機會 這算是突破後的回調 如果只是回調的話就可以看這條件介入 條件1:漲超過黃線 條件2:8H收縣在上方 成立條件很重要哦",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH latecomers to watch this trade for a post-breakout pullback entry, specifying conditions (break above yellow line, 8H close above) that must be met before entering, while also noting stop-loss adjustments for existing pre-orders.",
+     "error": null,
+     "latency_ms": 4868.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 571,
+      "completion_tokens": 654,
+      "total_tokens": 1225,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 574
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 187
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH watchers to watch the breakout-pullback trade and enter only if price rises above the yellow line and the 8H candle closes above it.",
+     "error": null,
+     "latency_ms": 4625.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 571,
+      "completion_tokens": 640,
+      "total_tokens": 1211,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 587
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 187
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author tells ETH sidelined traders to watch the setup and enter only if price breaks above the yellow line and 8H closes above it, while also noting a stop-loss adjustment for existing positions.",
+     "error": null,
+     "latency_ms": 10097.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 571,
+      "completion_tokens": 1298,
+      "total_tokens": 1869,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1239
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 187
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7952,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "author offers the setup but says he won't open it himself",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ZEC"
+   },
+   "text": "$ZEC 可能的合約機會 因為前面走了一個小下楔整理 我認為整理得還不錯 是有嚐試的可能 條件1:漲過黃線 條件2: 8H收過黃線 我有ETH的多單了 應該是不會開才對",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author shares a ZEC long setup with explicit conditions (break above yellow line and 8H close above it) for followers to prepare an entry, even though he says he likely won't take it himself.",
+     "error": null,
+     "latency_ms": 2517.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 678,
+      "completion_tokens": 247,
+      "total_tokens": 925,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 177
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 166
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author outlines a potential ZEC long with two explicit entry conditions (price breaking and 8H closing above the yellow line), even though he notes he likely won't take it himself.",
+     "error": null,
+     "latency_ms": 3197.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 678,
+      "completion_tokens": 321,
+      "total_tokens": 999,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 256
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 166
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author lays out a conditional long entry on ZEC if price breaks above the yellow line and the 8H candle closes above it, even though he says he probably won't take it himself.",
+     "error": null,
+     "latency_ms": 2344.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 678,
+      "completion_tokens": 250,
+      "total_tokens": 928,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 183
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 166
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7958,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "不要緊張 當成區間整理的一部份就行了 不過ETH那單被插掉了 挺可惜的 再觀察看看有沒有機會再參與 根據經驗 每次上漲前都會有這樣的下殺 我覺得不必太擔心 現在來說BTC的區間是走的比ETH好看的 我是希望他往下拿一下再走上去 所以這幾天要多觀察 我認為24小時內可以看到圖中這個走勢的話 那介入多單的機會就會出現 不要太過悲觀 現在依然在區間整理",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The author says a long-entry opportunity will appear if the chart pattern he sketches plays out within 24 hours, effectively setting a conditional long setup on BTC while merely telling followers to keep watching. | symbol:BTC!=ETH",
+     "error": null,
+     "latency_ms": 10106.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 661,
+      "completion_tokens": 1473,
+      "total_tokens": 2134,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1408
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 149
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only reassuring followers and saying to keep watching the range, with a vague hope that a long opportunity may appear if a certain chart pattern shows up—no instruction to enter, no defined trigger level. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 4228.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 661,
+      "completion_tokens": 475,
+      "total_tokens": 1136,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 408
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 149
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is commentary about range consolidation and a potential future long opportunity, not an instruction to enter, adjust, or close a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 9274.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 661,
+      "completion_tokens": 1287,
+      "total_tokens": 1948,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1240
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 149
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7960,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "author offers the setup but says he won't open it himself",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ZEC"
+   },
+   "text": "$ZEC 可能的合約機會 因為前面走了一個小下楔整理 我認為整理得還不錯 是有嚐試的可能 條件1:漲過黃線 條件2: 8H收過黃線 我有ETH的多單了 應該是不會開才對",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author outlines a conditional long entry for ZEC if it rises above and closes above the yellow line on 8H.",
+     "error": null,
+     "latency_ms": 6189.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 664,
+      "completion_tokens": 821,
+      "total_tokens": 1485,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 776
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author lays out a ZEC long setup with two explicit breakout conditions (price above and 8H close above the yellow line) for followers to watch.",
+     "error": null,
+     "latency_ms": 2620.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 664,
+      "completion_tokens": 266,
+      "total_tokens": 930,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 207
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "Author outlines a possible ZEC contract long with explicit entry conditions (price breaks and 8H closes above the yellow line), even though he says he likely won't take it himself.",
+     "error": null,
+     "latency_ms": 1716.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 664,
+      "completion_tokens": 208,
+      "total_tokens": 872,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 143
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 152
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7967,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "你要是在這裡割肉或是正要做空 那你會後悔做了這些事情",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is warning followers against cutting losses or shorting here, which is advice on what not to do rather than an instruction to take a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1353.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 510,
+      "completion_tokens": 93,
+      "total_tokens": 603,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 38
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 254
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is warning followers against cutting losses or opening shorts here, which is a statement about what not to do rather than an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1508.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 510,
+      "completion_tokens": 106,
+      "total_tokens": 616,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 52
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 254
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is warning followers against cutting losses or shorting here, which is a statement about what not to do rather than an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1645.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 510,
+      "completion_tokens": 104,
+      "total_tokens": 614,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 50
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 254
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7970,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "text says this setup is invalidated and never triggered",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "看到了一個ETH的參與機會 等了那麼久也走的蠻漂亮的 條件1:漲過黃線 條件2: 6H收線在上方 因大幅下跌 此單失效且無觸發 不要著急 慢慢來",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "ETH",
+     "reason": "The post describes an ETH breakout setup with conditions, but it explicitly says the order is invalid and was not triggered, so it is not an instruction to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 5148.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 495,
+      "completion_tokens": 672,
+      "total_tokens": 1167,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 619
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 239
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post describes an ETH setup with conditions but says it is invalid and not triggered, so it does not instruct a trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3236.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 495,
+      "completion_tokens": 328,
+      "total_tokens": 823,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 277
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 239
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "ETH",
+     "reason": "The author describes an ETH setup with conditions but explicitly says it was invalidated and never triggered by the drop, telling followers not to rush—no trade instruction now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1970.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 495,
+      "completion_tokens": 250,
+      "total_tokens": 745,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 191
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 239
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7972,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "brag after a listing-news screenshot",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "PONS"
+   },
+   "text": "PONS 到我的絕殺買點 然後剛好CB就放入到路線圖? 你覺得巧合嗎? 說過我有內線了 你們不信",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "PONS",
+     "reason": "The post is a retrospective boast/conspiracy comment that PONS hit the author's buy point, with no instruction or conditional invitation for followers to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3583.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 462,
+      "completion_tokens": 490,
+      "total_tokens": 952,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 437
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 206
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "PONS",
+     "reason": "The author is only boasting that PONS already reached his buy point and hinting at insider info, without instructing followers to enter, adjust, or exit a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2591.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 462,
+      "completion_tokens": 251,
+      "total_tokens": 713,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 190
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 206
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "PONS",
+     "reason": "The post merely boasts that price reached the author's own buy point and hints at insider knowledge; it gives followers no instruction or conditional entry to act on. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 4360.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 462,
+      "completion_tokens": 506,
+      "total_tokens": 968,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 448
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 206
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7977,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "text says this setup is invalidated and never triggered",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "看到了一個ETH的參與機會 等了那麼久也走的蠻漂亮的 條件1:漲過黃線 條件2: 6H收線在上方 因大幅下跌 此單失效且無觸發 不要著急 慢慢來",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "ETH",
+     "reason": "Author describes an ETH setup but states it is invalid and not triggered after the drop, so no trade is instructed. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3758.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 465,
+      "completion_tokens": 487,
+      "total_tokens": 952,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 438
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 209
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author only reviews an ETH setup whose conditions were never triggered and which he now declares invalid, with no instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3376.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 465,
+      "completion_tokens": 370,
+      "total_tokens": 835,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 320
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 209
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "Author describes an ETH setup that was invalidated by the drop and tells followers not to rush, so no trade instruction is given. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 4491.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 465,
+      "completion_tokens": 551,
+      "total_tokens": 1016,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 500
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 209
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7983,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "不要緊張 當成區間整理的一部份就行了 不過ETH那單被插掉了 挺可惜的 再觀察看看有沒有機會再參與 根據經驗 每次上漲前都會有這樣的下殺 我覺得不必太擔心 現在來說BTC的區間是走的比ETH好看的 我是希望他往下拿一下再走上去 所以這幾天要多觀察 我認為24小時內可以看到圖中這個走勢的話 那介入多單的機會就會出現 不要太過悲觀 現在依然在區間整理",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is reassurance and market commentary about range consolidation, noting the ETH trade was stopped out and only vaguely musing that a long opportunity may appear if a pattern shows up within 24 hours — no instruction or defined conditional entry. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3315.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 298,
+      "total_tokens": 842,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 227
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The post mainly comments on the invalidated ETH long and range conditions, but it states a conditional long opportunity, mainly for BTC, if the pictured pattern appears within 24 hours. | symbol:BTC!=ETH",
+     "error": null,
+     "latency_ms": 24265.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 3625,
+      "total_tokens": 4169,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 3562
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is mostly commentary and observation, only vaguely noting that a long opportunity may appear if a chart pattern occurs within 24 hours, without giving an actionable conditional entry instruction. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 8293.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 544,
+      "completion_tokens": 1083,
+      "total_tokens": 1627,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1028
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 160
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7985,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "author closes his ETH long; parser read a buy",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "看來 我的ETH多單可以出了",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "close",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author says his ETH long position can be exited, signaling a close of the long trade. | verdict:close",
+     "error": null,
+     "latency_ms": 2122.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 500,
+      "completion_tokens": 192,
+      "total_tokens": 692,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 149
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 244
+     },
+     "rule_reasons": [
+      "verdict:close"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "close",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "The author signals his ETH long can now be exited, implying followers should close their ETH longs. | verdict:close",
+     "error": null,
+     "latency_ms": 2884.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 500,
+      "completion_tokens": 330,
+      "total_tokens": 830,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 286
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 244
+     },
+     "rule_reasons": [
+      "verdict:close"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "close",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "The author announces that their ETH long position can be exited now, signaling followers to close their ETH longs. | verdict:close",
+     "error": null,
+     "latency_ms": 3574.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 500,
+      "completion_tokens": 375,
+      "total_tokens": 875,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 329
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 244
+     },
+     "rule_reasons": [
+      "verdict:close"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7990,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "不要緊張 當成區間整理的一部份就行了 不過ETH那單被插掉了 挺可惜的 再觀察看看有沒有機會再參與 根據經驗 每次上漲前都會有這樣的下殺 我覺得不必太擔心 現在來說BTC的區間是走的比ETH好看的 我是希望他往下拿一下再走上去 所以這幾天要多觀察 我認為24小時內可以看到圖中這個走勢的話 那介入多單的機會就會出現 不要太過悲觀 現在依然在區間整理",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is reflecting on being wicked out and telling followers to keep watching, not giving a now-actionable entry, exit, or conditional trade instruction. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 6393.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 631,
+      "completion_tokens": 859,
+      "total_tokens": 1490,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 804
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 247
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only offering reassurance and vague commentary about range consolidation and hoping for a future re-entry opportunity, with no instruction or defined conditional entry to act on now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3172.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 631,
+      "completion_tokens": 302,
+      "total_tokens": 933,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 244
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 247
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is reassurance and market commentary about range consolidation, noting the ETH long was stopped out and only vaguely musing that a long opportunity may appear later, without instructing followers to act now or setting a concrete conditional entry. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3232.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 631,
+      "completion_tokens": 333,
+      "total_tokens": 964,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 263
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 247
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7995,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "BTC目前這單是可以的 所以先發給你們看 如果之後有走個小區間上破 那這個黃線就會有所調整 有調整我在跟你們說 條件1:漲過黃線 條件2:6H收在黃線上方 一樣記得不要著急 好好地按照條件去做",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author presents a BTC long setup gated on two stated conditions (price above the yellow line and a 6H close above it), telling followers to wait and enter only when those are met.",
+     "error": null,
+     "latency_ms": 1955.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 158,
+      "total_tokens": 834,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 92
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives two conditions (break above yellow line and 6H close above it) for a BTC long setup, so it is a conditional entry plan.",
+     "error": null,
+     "latency_ms": 3211.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 342,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 284
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The author gives two explicit conditions to follow for a BTC long setup, so it is a stated conditional entry rather than an immediate trade.",
+     "error": null,
+     "latency_ms": 2900.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 409,
+      "total_tokens": 1085,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 355
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7996,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "BTC目前這單是可以的 所以先發給你們看 如果之後有走個小區間上破 那這個黃線就會有所調整 有調整我在跟你們說 條件1:漲過黃線 條件2:6H收在黃線上方 一樣記得不要著急 好好地按照條件去做",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives conditional long-entry criteria (break above yellow line and 6H close above it) and tells followers to wait and follow those conditions.",
+     "error": null,
+     "latency_ms": 4212.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 605,
+      "total_tokens": 1281,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 549
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author says the current BTC long is valid and gives two conditions (breaking above the yellow line and a 6H close above it) before acting, telling followers not to rush and to follow the conditions.",
+     "error": null,
+     "latency_ms": 2328.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 208,
+      "total_tokens": 884,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 140
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author shares the current BTC long setup and states explicit conditional entry criteria (break above the yellow line plus a 6H close above it) before entering.",
+     "error": null,
+     "latency_ms": 2735.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 676,
+      "completion_tokens": 263,
+      "total_tokens": 939,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 205
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 164
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 7999,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "DeFi project shill, not a perp call",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "KING"
+   },
+   "text": "我在RH鏈上找到一個DEFI項目 DLMMKING 先說說這背景吧 開發人員是從SONIC鏈來的 MetropolisDEX 而且上一個他們開發的項目受到AC的大大稱讚及青睞 技術方面我認為是不容質疑的 在MEME滿天飛的時刻 買點正規軍我認為是很好的投資 他們做了DLMM的協議還有排行榜的儀表板 當協議的使用量變龐大的話 這 $KING 價格會螺旋升天 🔑 DLMM 是什麼？ 可以把他理解為進階",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "KING",
+     "reason": "The post is a promotional/opinion piece introducing the DLMMKING DeFi project with a bullish outlook, not an instruction to enter, adjust, or close a trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3303.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 841,
+      "completion_tokens": 347,
+      "total_tokens": 1188,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 285
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "KING",
+     "reason": "The author is giving project commentary and a personal investment opinion about $KING, not instructing followers to enter a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 4341.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 841,
+      "completion_tokens": 556,
+      "total_tokens": 1397,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 512
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is sharing research and a personal opinion that the DLMMKING project looks like a good investment, without instructing followers to enter a trade or giving any entry/exit conditions. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3309.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 841,
+      "completion_tokens": 315,
+      "total_tokens": 1156,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 253
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8001,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "PONS"
+   },
+   "text": "關於PONS 我覺得有一個合約的機會 你們可以小倉試試看 PONS我還是建議盡量現貨為主的 別上頭哦 條件1:漲過黃線 條件2:6H收線在上方 OURBIT也可以玩PONS合約哦: https://www.ourbit.com/zh-TW/register?inviteCode=POPI88",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "Author invites followers to a small-size contract trade on PONS but only once two stated conditions are met (break above the yellow line and a 6H close above it).",
+     "error": null,
+     "latency_ms": 2141.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 914,
+      "completion_tokens": 157,
+      "total_tokens": 1071,
+      "prompt_tokens_details": {
+       "cached_tokens": 768
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 94
+      },
+      "prompt_cache_hit_tokens": 768,
+      "prompt_cache_miss_tokens": 146
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "Author invites followers to try a small PONS contract position once price breaks the yellow line and a 6H candle closes above it, a stated conditional entry setup.",
+     "error": null,
+     "latency_ms": 2451.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 914,
+      "completion_tokens": 132,
+      "total_tokens": 1046,
+      "prompt_tokens_details": {
+       "cached_tokens": 768
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 71
+      },
+      "prompt_cache_hit_tokens": 768,
+      "prompt_cache_miss_tokens": 146
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "The author invites a small futures position in PONS but only once it breaks above the yellow line and closes above it on the 6H, a stated conditional entry.",
+     "error": null,
+     "latency_ms": 1984.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 914,
+      "completion_tokens": 141,
+      "total_tokens": 1055,
+      "prompt_tokens_details": {
+       "cached_tokens": 768
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 79
+      },
+      "prompt_cache_hit_tokens": 768,
+      "prompt_cache_miss_tokens": 146
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8007,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "PONS"
+   },
+   "text": "關於PONS 我覺得有一個合約的機會 你們可以小倉試試看 PONS我還是建議盡量現貨為主的 別上頭哦 條件1:漲過黃線 條件2:6H收線在上方 OURBIT也可以玩PONS合約哦: https://www.ourbit.com/zh-TW/register?inviteCode=POPI88",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "Author frames a PONS contract opportunity with two explicit entry conditions (break above the yellow line and a 6H close above it), inviting a small position only if those conditions trigger.",
+     "error": null,
+     "latency_ms": 1778.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 578,
+      "completion_tokens": 163,
+      "total_tokens": 741,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 98
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "Author invites a small contract position on PONS contingent on two stated conditions (breaking above the yellow line and a 6H close above it).",
+     "error": null,
+     "latency_ms": 2467.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 578,
+      "completion_tokens": 257,
+      "total_tokens": 835,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 200
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "PONS",
+     "reason": "Author describes a PONS futures opportunity with stated conditions to enter (break the yellow line and 6H close above it), inviting followers to try a small position.",
+     "error": null,
+     "latency_ms": 1800.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 578,
+      "completion_tokens": 185,
+      "total_tokens": 763,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 124
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8015,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "BTC目前這單是可以的 所以先發給你們看 如果之後有走個小區間上破 那這個黃線就會有所調整 有調整我在跟你們說 條件1:漲過黃線 條件2:6H收在黃線上方 一樣記得不要著急 好好地按照條件去做",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author lays out stated conditional entry criteria (break above the yellow line and a 6H close above it) for a BTC long.",
+     "error": null,
+     "latency_ms": 1751.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 529,
+      "completion_tokens": 175,
+      "total_tokens": 704,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 121
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 145
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives conditions to buy BTC once it rises above the yellow line and 6H closes above it, telling followers to follow those conditions.",
+     "error": null,
+     "latency_ms": 2879.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 529,
+      "completion_tokens": 329,
+      "total_tokens": 858,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 274
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 145
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The author gives explicit conditions to watch for an entry/confirmation (break above yellow line and 6H close above it) and tells followers to follow those conditions.",
+     "error": null,
+     "latency_ms": 3409.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 529,
+      "completion_tokens": 468,
+      "total_tokens": 997,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 414
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 145
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8027,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH目前多觀察了幾天 這機會是可以的 你如果覺得BTC不喜歡 想做ETH 那你可以看看這單 BTC ETH選一個開就好 條件1:漲過黃線 條件2:8H收過上方 耐心嘿",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author says to watch ETH and open one of BTC/ETH only after it rises above the yellow line and closes above the upper level on the 8H chart.",
+     "error": null,
+     "latency_ms": 10621.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 439,
+      "completion_tokens": 1590,
+      "total_tokens": 2029,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1537
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 183
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author invites followers to open either BTC or ETH once two stated conditions (price above the yellow line and an 8H close above resistance) are met, a conditional entry setup.",
+     "error": null,
+     "latency_ms": 1881.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 439,
+      "completion_tokens": 130,
+      "total_tokens": 569,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 67
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 183
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "The author gives conditional entry conditions for ETH/BTC, telling followers to choose one and open only after the yellow line break and 8H close above the upper level.",
+     "error": null,
+     "latency_ms": 3228.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 439,
+      "completion_tokens": 315,
+      "total_tokens": 754,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 254
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 183
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8032,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "資本市場就是越墊越高的 你在偏低的地方還做空 別跟我說你會交易",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is general commentary mocking shorting at lows, not an instruction to take any trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1615.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 429,
+      "completion_tokens": 140,
+      "total_tokens": 569,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 95
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 173
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is commentary criticizing shorting at lows, not instructing followers to enter, adjust, or close a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2297.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 429,
+      "completion_tokens": 180,
+      "total_tokens": 609,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 131
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 173
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only voicing an opinion that shorting at low prices is foolish, not instructing followers to enter, adjust, or close any trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1725.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 429,
+      "completion_tokens": 134,
+      "total_tokens": 563,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 78
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 173
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8041,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "author closed his ETH long; parser read a buy",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "我把我的ETH多單出光",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only reporting that he closed his own ETH long, not telling followers to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3188.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 396,
+      "completion_tokens": 384,
+      "total_tokens": 780,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 340
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 140
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "close",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "The author announces he has fully exited his ETH long position, signaling followers to close their longs too. | verdict:close",
+     "error": null,
+     "latency_ms": 3193.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 396,
+      "completion_tokens": 373,
+      "total_tokens": 769,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 328
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 140
+     },
+     "rule_reasons": [
+      "verdict:close"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "close",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "作者表示已將自己的ETH多單全部出清，屬於平倉動作。 | verdict:close",
+     "error": null,
+     "latency_ms": 1565.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 396,
+      "completion_tokens": 131,
+      "total_tokens": 527,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 89
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 140
+     },
+     "rule_reasons": [
+      "verdict:close"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8043,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "says longing BTC is better; parser read ETH",
+   "parsed": {
+    "intent": "limit",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "目前回調都在正常範圍內 就是ETH比較麻煩 所以我覺得做多BTC會更好",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only giving a general opinion that longing BTC would be better than ETH, with no entry instruction, level, or conditional setup for followers to act on. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3182.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 390,
+      "completion_tokens": 375,
+      "total_tokens": 765,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 317
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only giving a comparative opinion that BTC looks better than ETH during a normal pullback, without instructing a specific entry, stop, target, or close. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2345.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 390,
+      "completion_tokens": 266,
+      "total_tokens": 656,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 207
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only offering an opinion that longing BTC looks better than ETH during a normal pullback, without instructing or inviting any specific entry. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3721.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 390,
+      "completion_tokens": 480,
+      "total_tokens": 870,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 426
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8060,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "plan with numbered zones but no entry now",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "計畫是這樣的 最好的狀況當然是1這裡直接上去 如果1 這邊走勢不好多單止損的話 我會著重等2 的地方找機會做多 即便看多也不能無腦梭哈 畢竟市場怎麼走無法預測 我們只能先想好大概的計畫 耐心點 滾倉也不是這時候",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author describes a conditional plan to wait for level 2 to go long if the current long stops out, rather than entering immediately.",
+     "error": null,
+     "latency_ms": 11348.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 481,
+      "completion_tokens": 1602,
+      "total_tokens": 2083,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1549
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "Author gives a conditional plan to look for a long at area 2 if the current long stops out, rather than entering immediately now.",
+     "error": null,
+     "latency_ms": 6091.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 481,
+      "completion_tokens": 736,
+      "total_tokens": 1217,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 682
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BTC",
+     "reason": "The author outlines a conditional long plan: if the level-1 long gets stopped out, he will wait for level 2 to look for a long entry.",
+     "error": null,
+     "latency_ms": 7359.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 481,
+      "completion_tokens": 988,
+      "total_tokens": 1469,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 936
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 225
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8081,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "update",
+    "side": "hold",
+    "symbol": "BTC"
+   },
+   "text": "大概檢討一下 我認為這是我今年做最差的一筆交易 6萬獲利只賺了1萬3 2700的時候我其實就想獲利了解了 被不明力量蠱惑到了 而破2700的時候 就該止盈了我還在凹 沒凹的話 大概能入4~5萬U吧 記取這次教訓 下次要單筆賺個10萬U 希望今年挑戰帳戶能破20萬U",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is reflecting on a past losing trade and the lessons learned, with no instruction for followers to enter, adjust, or close any position now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2107.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 554,
+      "completion_tokens": 136,
+      "total_tokens": 690,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 81
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 170
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only reviewing a past trade and reflecting on lessons learned, not instructing followers to enter, adjust, or close any position now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3465.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 554,
+      "completion_tokens": 384,
+      "total_tokens": 938,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 335
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 170
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is reviewing a past losing/underperforming trade and reflecting on lessons learned, not instructing followers to enter, adjust, or close any position now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1631.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 554,
+      "completion_tokens": 120,
+      "total_tokens": 674,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 62
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 170
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8089,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "我應該是不會去做空拉",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is stating he will probably not short, which is a statement about what he won't do rather than an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1458.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 385,
+      "completion_tokens": 126,
+      "total_tokens": 511,
+      "prompt_tokens_details": {
+       "cached_tokens": 251
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 74
+      },
+      "prompt_cache_hit_tokens": 251,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only saying they probably won't short, which is a statement about what they are not doing rather than an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1734.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 385,
+      "completion_tokens": 144,
+      "total_tokens": 529,
+      "prompt_tokens_details": {
+       "cached_tokens": 251
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 91
+      },
+      "prompt_cache_hit_tokens": 251,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author only says they probably won't short, which is a personal statement, not an instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2089.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 385,
+      "completion_tokens": 182,
+      "total_tokens": 567,
+      "prompt_tokens_details": {
+       "cached_tokens": 251
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 135
+      },
+      "prompt_cache_hit_tokens": 251,
+      "prompt_cache_miss_tokens": 134
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "month_2026_09",
+   "id": 8092,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "真是的 我如意算盤都打好了 拿這合約賺的6萬 拿去買PONS PONS在翻個幾倍 輕鬆達標30萬 爽呵呵 這下好了 ETH墜下來 沒了 計畫趕不上變化 就是這意思",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "ETH",
+     "reason": "The author is lamenting how a past plan (using contract profits to buy PONS) was ruined by ETH dropping, not giving any instruction to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2010.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 442,
+      "completion_tokens": 115,
+      "total_tokens": 557,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 57
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "Author is merely lamenting that his personal plan fell apart after ETH dropped, with no instruction for followers to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1628.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 442,
+      "completion_tokens": 82,
+      "total_tokens": 524,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 34
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only lamenting that ETH's drop ruined his personal plan to fund a PONS purchase, with no instruction or invitation for followers to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1502.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 442,
+      "completion_tokens": 108,
+      "total_tokens": 550,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 52
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 4952,
+   "should_act": true,
+   "ambiguous": true,
+   "note": "'buy point buy point' on a pullback; spot-ish",
+   "parsed": {
+    "intent": "limit",
+    "side": "buy",
+    "symbol": "ZEC"
+   },
+   "text": "$ZEC 合理回調 買點買點",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "enter_now",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "The author calls the current ZEC pullback a buy point, indicating followers should buy now.",
+     "error": null,
+     "latency_ms": 2078.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 314,
+      "completion_tokens": 189,
+      "total_tokens": 503,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 150
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "enter_now",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "The author calls the reasonable pullback a buy point and repeats the buy instruction for ZEC.",
+     "error": null,
+     "latency_ms": 3258.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 314,
+      "completion_tokens": 359,
+      "total_tokens": 673,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 313
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "enter_now",
+     "side": "buy",
+     "symbol": "ZEC",
+     "reason": "The author explicitly calls ZEC a buy point after a reasonable pullback, instructing followers to buy now.",
+     "error": null,
+     "latency_ms": 1764.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 314,
+      "completion_tokens": 147,
+      "total_tokens": 461,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 98
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5702,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "我還是在等做空機會 一起等嗎？",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author says he is still waiting for a shorting opportunity and invites others to wait too, which states no entry, condition, or instruction to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1846.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 523,
+      "completion_tokens": 161,
+      "total_tokens": 684,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 104
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 139
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author only says he is still waiting for a shorting opportunity and invites others to wait with him, without giving any entry, condition, or instruction to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2240.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 523,
+      "completion_tokens": 220,
+      "total_tokens": 743,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 162
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 139
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only saying they are still waiting for a short opportunity and asking if others are waiting too, not instructing a trade now or giving a stated conditional entry. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2915.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 523,
+      "completion_tokens": 292,
+      "total_tokens": 815,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 233
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 139
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5718,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "$BTC 我不知道 我真的不太看好 但想開空單的話我會等這裡 條件1:跌過這區間 條件2:4H收線在下方 (1D有更好)",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he would only short BTC if price breaks below the range and closes a 4H candle under it, giving explicit conditional entry criteria.",
+     "error": null,
+     "latency_ms": 1986.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 587,
+      "completion_tokens": 122,
+      "total_tokens": 709,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 66
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 203
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author says if opening a short he would wait for BTC to drop past the zone and a 4H close below it, giving a conditional entry setup.",
+     "error": null,
+     "latency_ms": 1783.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 587,
+      "completion_tokens": 217,
+      "total_tokens": 804,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 159
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 203
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he'd wait for a break below the zone with a 4H (or 1D) close underneath before shorting BTC, giving explicit conditional entry criteria.",
+     "error": null,
+     "latency_ms": 2341.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 587,
+      "completion_tokens": 237,
+      "total_tokens": 824,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 175
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 203
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5822,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "suggests buying tomorrow; author bought some spot",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "KIN"
+   },
+   "text": "$KIN 總算是TGE了 想抄底部的話 明天再抄會好點哦 賣壓消化我覺得差不多是一天 買了點放著了 支持一下",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "KIN",
+     "reason": "The author only reports his own small buy and suggests waiting until tomorrow before buying the dip, which is advice to hold off rather than an instruction to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3846.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 607,
+      "completion_tokens": 530,
+      "total_tokens": 1137,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 471
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 223
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "KIN",
+     "reason": "The author is merely commenting on KIN's TGE and his own small buy, and advises waiting until tomorrow rather than telling followers to enter now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3118.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 607,
+      "completion_tokens": 375,
+      "total_tokens": 982,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 318
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 223
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": "KIN",
+     "reason": "The author merely shares his own bottom-buying opinion and discloses he already bought and is holding, advising that buying tomorrow would be better rather than instructing followers to enter now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3670.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 607,
+      "completion_tokens": 453,
+      "total_tokens": 1060,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 390
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 223
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 5869,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "BTC"
+   },
+   "text": "$M這績效可是比抄底BTC ETH 還要好上好幾倍呢",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is a boastful performance comparison of $M versus bottom-fishing BTC/ETH, with no instruction to enter, exit, or adjust any trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 1514.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 512,
+      "completion_tokens": 102,
+      "total_tokens": 614,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 45
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post only boasts that $M's performance beats bottom-fishing BTC/ETH, offering no instruction or conditional entry for followers. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2266.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 512,
+      "completion_tokens": 188,
+      "total_tokens": 700,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 137
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post merely boasts about $M's performance compared to buying BTC/ETH dips, offering no instruction or conditional entry to act on. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2009.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 512,
+      "completion_tokens": 134,
+      "total_tokens": 646,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 82
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6014,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "ETH"
+   },
+   "text": "$ETH 其實我覺得挺不錯的 想開空單我會等這裡 條件1:跌過這區間 條件2:6H收線在下方 (1D有更好)",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "Author states he would wait for a drop through this zone plus a 6H (preferably 1D) close below before opening an ETH short, giving explicit entry conditions.",
+     "error": null,
+     "latency_ms": 2181.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 537,
+      "completion_tokens": 270,
+      "total_tokens": 807,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 207
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 153
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "Author states conditions to short $ETH (break below the zone and a 6H close below it, 1D preferable), a stated conditional entry.",
+     "error": null,
+     "latency_ms": 2802.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 537,
+      "completion_tokens": 334,
+      "total_tokens": 871,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 276
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 153
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "ETH",
+     "reason": "The author states he would short ETH only after two conditions are met (price drops through the zone and a 6H candle closes below), which is a stated conditional entry setup.",
+     "error": null,
+     "latency_ms": 1872.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 537,
+      "completion_tokens": 227,
+      "total_tokens": 764,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 164
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 153
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6059,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "$BTC 這裡我會等待他有一個下破的動作 如果是多走幾根在下破 會更好 此圖為8H (補上了) 條件1:跌過這區間 條件2:8H收線在下方 (1D有更好)",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he will wait for a breakdown below the zone with an 8H close below as confirmation, a stated conditional entry setup.",
+     "error": null,
+     "latency_ms": 1808.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 1033,
+      "completion_tokens": 208,
+      "total_tokens": 1241,
+      "prompt_tokens_details": {
+       "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 154
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 137
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author sets conditions for a bearish breakdown entry on BTC, waiting for price to drop below a range and close below on 8H/1D.",
+     "error": null,
+     "latency_ms": 2987.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 1033,
+      "completion_tokens": 358,
+      "total_tokens": 1391,
+      "prompt_tokens_details": {
+       "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 300
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 137
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he is waiting for a breakdown below the zone with an 8H close below (1D better) as explicit conditions before entering short.",
+     "error": null,
+     "latency_ms": 2362.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 1033,
+      "completion_tokens": 245,
+      "total_tokens": 1278,
+      "prompt_tokens_details": {
+       "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 188
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 137
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6190,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "BTC這是屬於結構成形的右側空單 我覺得可以這樣開 條件依然是按照之前說的 提醒:不要因為市場消息影響你的交易 不然你會做得不三不四 條件1:跌過這低點 條件2:12H收線在下方 (1D有更好)",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author lays out a BTC right-side short with stated conditions (break below the low, 12H close below it) to be triggered later.",
+     "error": null,
+     "latency_ms": 1316.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 787,
+      "completion_tokens": 102,
+      "total_tokens": 889,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 46
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 147
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "The author outlines a right-side BTC short with stated entry conditions (break below the low, 12H close below), so it's a conditional setup rather than an immediate entry.",
+     "error": null,
+     "latency_ms": 1761.6,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 787,
+      "completion_tokens": 125,
+      "total_tokens": 912,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 62
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 147
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author outlines a right-side BTC short with stated conditions (break the low, 12H close below) that must trigger before entry.",
+     "error": null,
+     "latency_ms": 1728.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 787,
+      "completion_tokens": 131,
+      "total_tokens": 918,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 77
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 147
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6325,
+   "should_act": false,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "market",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "主阿 我有罪 我不應該把BTC的空單平掉 我當時在想什麼呢? 沒事 人就是會錯過美好事物 但你們不會錯過牛妹的 對吧? 畢竟外遇的話要斬下來 🔪",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is merely regretting having closed his own BTC short, not instructing followers to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3342.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 706,
+      "completion_tokens": 415,
+      "total_tokens": 1121,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 375
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only expressing regret about having closed his own BTC short in the past, not telling followers to take any trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2201.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 706,
+      "completion_tokens": 146,
+      "total_tokens": 852,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 96
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is reflecting on having already closed a BTC short in the past, not instructing followers to trade now. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 2633.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 706,
+      "completion_tokens": 288,
+      "total_tokens": 994,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 240
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 194
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6361,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "BTC 我覺得這單還不錯 是個下破後的楔形走弱 但由於K線太多了 所以我建議看日線比較好 但你可以先在4H成立的時候入場 然後等待日線是否成立 如沒成立就要先離場在觀察 條件1:跌過這低點 *68300 條件2:1日收線在下方",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author lays out a conditional short entry (4H breakdown with conditions of dropping below 68300 and a daily close below), to be exited if the daily setup fails.",
+     "error": null,
+     "latency_ms": 2144.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 799,
+      "completion_tokens": 196,
+      "total_tokens": 995,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 135
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 159
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "The author outlines conditional short-entry criteria for BTC: enter when the 4H setup confirms, requiring a drop below 68300 and a daily close below.",
+     "error": null,
+     "latency_ms": 3141.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 799,
+      "completion_tokens": 406,
+      "total_tokens": 1205,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 354
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 159
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author gives conditional short-entry instructions for BTC if the 4H setup confirms and conditions (drop below 68300 and daily close below) are met, with an exit plan if daily fails.",
+     "error": null,
+     "latency_ms": 4949.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 799,
+      "completion_tokens": 673,
+      "total_tokens": 1472,
+      "prompt_tokens_details": {
+       "cached_tokens": 640
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 614
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 159
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 6850,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "advice to wait 7 days or buy 10-20% now",
+   "parsed": {
+    "intent": "market",
+    "side": "buy",
+    "symbol": "BP"
+   },
+   "text": "給想買 $BP 的人一些建議 現在高了一些 我覺得你們可以等7天後 質押解鎖之後的拋壓在慢慢買入 你怕踏空 可以先買10~20% 因為沒人能知道 這7天內他會漲多少",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BP",
+     "reason": "Author advises waiting 7 days for staking-unlock sell pressure before buying BP, but suggests a small 10-20% starter buy if worried about missing out, making it a conditional entry setup.",
+     "error": null,
+     "latency_ms": 5937.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 585,
+      "completion_tokens": 786,
+      "total_tokens": 1371,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 725
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BP",
+     "reason": "The author advises waiting 7 days for post-unlock selling pressure before gradually buying $BP, or taking a 10–20% starter position if afraid of missing out.",
+     "error": null,
+     "latency_ms": 3601.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 585,
+      "completion_tokens": 472,
+      "total_tokens": 1057,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 417
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "BP",
+     "reason": "Author lays out a conditional entry plan for $BP — wait for the post-unlock selling pressure in 7 days and accumulate gradually, or take a 10–20% starter position now if afraid of missing out.",
+     "error": null,
+     "latency_ms": 3374.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 585,
+      "completion_tokens": 412,
+      "total_tokens": 997,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 341
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 201
+     },
+     "rule_reasons": [
+      "verdict:conditional_setup"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7048,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "author's exit level for his BTC short (adjust exit)",
+   "parsed": {
+    "intent": "update",
+    "side": "hold",
+    "symbol": "BTC"
+   },
+   "text": "我的BTC空單碰62200的話 我就會閃人了 如果沒有 就繼續拿了",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only describing their own plan for their existing BTC short (bail at 62200) rather than instructing followers to enter, adjust, or close a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 3710.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 570,
+      "completion_tokens": 462,
+      "total_tokens": 1032,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 401
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": true,
+     "verdict": "adjust_exit",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he will close his BTC short if price reaches 62200, indicating a conditional exit level for followers holding the same short.",
+     "error": null,
+     "latency_ms": 5674.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 570,
+      "completion_tokens": 795,
+      "total_tokens": 1365,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 741
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "adjust_exit",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states a conditional exit for his BTC short at 62200, otherwise he will continue holding.",
+     "error": null,
+     "latency_ms": 11365.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 570,
+      "completion_tokens": 1735,
+      "total_tokens": 2305,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1688
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 186
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "wrong_block",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": true
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7154,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "sell",
+    "symbol": "BTC"
+   },
+   "text": "還是想等突破67250那個點在做 不過有機會的話 這單也可以觀察看看 記得要等12H收線才算成立喔 條件1:跌過這黃色線 條件2: 12H收在下方",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states a conditional short entry, waiting for a break below the line with a 12H close below to confirm the setup.",
+     "error": null,
+     "latency_ms": 1949.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 703,
+      "completion_tokens": 158,
+      "total_tokens": 861,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 105
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 191
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "The author lays out a short setup that only triggers after a 12H close below the yellow line/67250, so it's a stated conditional entry rather than an immediate one.",
+     "error": null,
+     "latency_ms": 2134.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 703,
+      "completion_tokens": 186,
+      "total_tokens": 889,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 122
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 191
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "sell",
+     "symbol": "BTC",
+     "reason": "Author states he wants to wait for a 12H close below the yellow line / 67250 before entering the short, giving explicit conditional entry criteria.",
+     "error": null,
+     "latency_ms": 2017.0,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 703,
+      "completion_tokens": 146,
+      "total_tokens": 849,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 88
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 191
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7217,
+   "should_act": true,
+   "ambiguous": false,
+   "note": "",
+   "parsed": {
+    "intent": "confirm_breakout",
+    "side": "buy",
+    "symbol": "ETH"
+   },
+   "text": "ETH這張多單 雖然走了個頂部結構 但還在黏的話可能就是還沒結束 正巧這裡附近是上一個前高的地方 可能可以做一個多單 由於我整體看空的 所以多單的部位不會跟平常一樣大 會開小一些 理想狀態是ETH往上走 然後BTC剛好走個破新高 那就可以開始關注BTC的空單機會了 條件1:漲過黃線 條件2:8H收線在上方 更: 止損我還是拉到1800好了",
+   "decisions": [
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author outlines a conditional ETH long if price rises above the yellow line and the 8H candle closes above it, with a stop at 1800.",
+     "error": null,
+     "latency_ms": 14158.3,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 662,
+      "completion_tokens": 2216,
+      "total_tokens": 2878,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 2158
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 150
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author outlines conditions (break above the yellow line and an 8H close above it) for a small long entry in ETH, and notes he's moving his stop to 1800.",
+     "error": null,
+     "latency_ms": 4518.1,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 662,
+      "completion_tokens": 589,
+      "total_tokens": 1251,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 524
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 150
+     },
+     "rule_reasons": []
+    },
+    {
+     "allow": true,
+     "verdict": "conditional_setup",
+     "side": "buy",
+     "symbol": "ETH",
+     "reason": "Author states conditions for an ETH long entry and updates the stop loss, making it a conditional trade setup.",
+     "error": null,
+     "latency_ms": 5890.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 662,
+      "completion_tokens": 827,
+      "total_tokens": 1489,
+      "prompt_tokens_details": {
+       "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 779
+      },
+      "prompt_cache_hit_tokens": 512,
+      "prompt_cache_miss_tokens": 150
+     },
+     "rule_reasons": []
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7383,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "take-profit to 3000 is for ETH, parser said BTC",
+   "parsed": {
+    "intent": "update",
+    "side": "hold",
+    "symbol": "BTC"
+   },
+   "text": "這止盈價格我先放到3000好了 哈哈哈",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The post is a vague, joking statement about setting a take-profit price without specifying a trade, symbol, or instruction to followers. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 21594.2,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 410,
+      "completion_tokens": 3366,
+      "total_tokens": 3776,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 3315
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 154
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is casually saying he will set his own take-profit level to 3000 with no instrument or instruction to followers, so it is not actionable. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 9207.7,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 410,
+      "completion_tokens": 1224,
+      "total_tokens": 1634,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 1168
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 154
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is joking about their own take-profit level at 3000 with no stated asset and no instruction or invitation for followers to trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 4054.8,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 410,
+      "completion_tokens": 433,
+      "total_tokens": 843,
+      "prompt_tokens_details": {
+       "cached_tokens": 256
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 380
+      },
+      "prompt_cache_hit_tokens": 256,
+      "prompt_cache_miss_tokens": 154
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  },
+  {
+   "set": "older_2025_10_2026_08",
+   "id": 7408,
+   "should_act": false,
+   "ambiguous": true,
+   "note": "target 3000-3250 is for ETH, parser said BTC",
+   "parsed": {
+    "intent": "update",
+    "side": "hold",
+    "symbol": "BTC"
+   },
+   "text": "別忘囉 2400已經是過去式了 我的目標現在是3000~3250",
+   "decisions": [
+    {
+     "allow": false,
+     "verdict": "adjust_exit",
+     "side": "buy",
+     "symbol": null,
+     "reason": "Author updates his target to 3000~3250, implying a change to exit target for a long position.",
+     "error": null,
+     "latency_ms": 16627.9,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 640,
+      "completion_tokens": 2465,
+      "total_tokens": 3105,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 2416
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "symbol:None!=BTC"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "not_actionable",
+     "side": null,
+     "symbol": null,
+     "reason": "The author is only stating a personal price target, not instructing followers to enter, adjust, or close a trade. | verdict:not_actionable",
+     "error": null,
+     "latency_ms": 6052.4,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 640,
+      "completion_tokens": 773,
+      "total_tokens": 1413,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 729
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "verdict:not_actionable"
+     ]
+    },
+    {
+     "allow": false,
+     "verdict": "adjust_exit",
+     "side": "buy",
+     "symbol": null,
+     "reason": "The author updates the profit target to 3000~3250, signaling a change to the exit level.",
+     "error": null,
+     "latency_ms": 33819.5,
+     "version": "llm_gate.v1",
+     "usage": {
+      "prompt_tokens": 640,
+      "completion_tokens": 5312,
+      "total_tokens": 5952,
+      "prompt_tokens_details": {
+       "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 5264
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 256
+     },
+     "rule_reasons": [
+      "symbol:None!=BTC"
+     ]
+    }
+   ],
+   "outcomes": [
+    "correct",
+    "correct",
+    "correct"
+   ],
+   "outcome": "correct",
+   "unstable": false
+  }
+ ]
+}

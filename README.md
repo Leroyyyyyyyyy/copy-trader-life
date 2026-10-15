@@ -116,7 +116,9 @@ python -m src.lab.cli evaluate --model deepseek --out experiments/reports/f7_dee
 
 Lab 的 DeepSeek 适配器（`src/lab/models/provider.py`）只从 `.env` 读取 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、可选 `DEEPSEEK_LAB_MODEL`（默认 `deepseek-flash`）三行，不把整份 `.env` 载入进程环境。
 
-图表读图（`src/chart_reader.py`）在引擎里要求 DeepSeek 视觉读数与 tesseract OCR（`src/chart_ocr.py`）读出同一个入场价和止损才采用，否则该带图突破单不建计划（`chart_stop_unverified`）。需要本机安装 tesseract（macOS：`brew install tesseract`）；未安装时一律不采用读图价位。读图评测：`python -m src.lab.experiments.chart_eval`（标准答案 `experiments/fixtures/charts/`，图片在被忽略的 `data/lab/popi_images/`）。
+图表读图（`src/chart_reader.py`）在引擎里用 `ocr_primary`：价位数字取自 tesseract OCR（`src/chart_ocr.py`，同一读数至少 3 个预处理变体一致），DeepSeek 视觉只用来确认哪个标签是入场、哪个是止损；止损必须是最外侧的红色标签且离视觉读数最近，否则该带图突破单不建计划（`chart_stop_unverified`）。需要本机安装 tesseract（macOS：`brew install tesseract`）；未安装时一律不采用读图价位。读图评测：`python -m src.lab.experiments.chart_eval`，留出集加 `--heldout experiments/fixtures/charts/popi_2026_h1_heldout_labels.json`（标准答案 `experiments/fixtures/charts/`，图片在被忽略的 `data/lab/popi_images/`）。
+
+LLM 闸门（`src/llm_gate.py`）：规则解析器判出要下单/改单/平仓后、读图之前，DeepSeek 读这条消息和频道前 6 条，判断作者是在叫人交易（`enter_now` / `conditional_setup` / `adjust_exit` / `close`）还是在复盘、炫耀、评论（`not_actionable`）；方向、币种也要与解析器一致才放行，出错默认不放行。配置 `config.yaml` 的 `llm_gate: {enabled, on_error}`；模型取 `DEEPSEEK_GATE_MODEL`，否则同 lab。评测：`python -m src.lab.experiments.gate_eval --repeats 3`（标准答案 `experiments/fixtures/gate/`）。
 
 H3 的 `run_program` 需要本机 Docker daemon 与 `python:3.12-alpine`。daemon 未运行时该工具不注册，不会退回宿主 `exec/eval`。L5 的 LangGraph adapter 需要 `langgraph`（见 `requirements.txt`）；native adapter 不依赖它。
 

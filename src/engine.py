@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections import deque
 from typing import Any, Optional
 
 from .hyperliquid_venue import HyperliquidVenue
@@ -13,6 +14,9 @@ from .store import JsonStore
 from .util import setup_logging
 
 log = setup_logging()
+
+# Parsed intents that would act; the LLM gate reviews these before execution.
+GATED_INTENTS = {Intent.MARKET, Intent.LIMIT, Intent.CONFIRM_BREAKOUT, Intent.WAIT_TARGET, Intent.UPDATE, Intent.CLOSE}
 
 
 class Engine:
@@ -28,6 +32,7 @@ class Engine:
         )
         self.channel_cfg = self._channel_map(cfg)
         self.context: dict[str, dict[str, Any]] = {}
+        self.recent_texts: dict[str, deque] = {}
         self.plans: dict[str, Plan] = {}
         self._next_hl_reconcile_at = 0.0
         self._hl_reconcile_interval = float(
@@ -217,6 +222,11 @@ class Engine:
         if not ch.get("enabled", True):
             return None
 
+        recent = self.recent_texts.setdefault(channel, deque(maxlen=6))
+        context = list(recent)
+        if text:
+            recent.append(text)
+
         inherit = bool(ch.get("inherit_context", True))
         ctx = (self.context.get(channel) or {}) if inherit else {}
         signal = parse_message(
@@ -233,6 +243,27 @@ class Engine:
         if boost and not signal.skip_reason:
             signal.confidence = max(0.0, min(0.99, signal.confidence + boost))
             signal.reason = (signal.reason + f";boost:{boost:+.2f}").strip(";")
+
+        gate_cfg = self.cfg.get("llm_gate") or {}
+        if (
+            gate_cfg.get("enabled")
+            and not signal.skip_reason
+            and signal.intent in GATED_INTENTS
+        ):
+            from .llm_gate import review
+
+            decision = review(
+                text=text,
+                context=context,
+                parsed={"intent": signal.intent.value, "side": signal.side.value, "symbol": signal.symbol},
+                has_image=bool(image_path),
+                on_error=str(gate_cfg.get("on_error", "skip")),
+            )
+            log.info("llm gate #%s allow=%s verdict=%s %s", message_id, decision.allow, decision.verdict, decision.reason)
+            signal.reason = (signal.reason + f";llm_gate:{decision.verdict}").strip(";")
+            if not decision.allow:
+                signal.skip_reason = f"llm_gate:{decision.verdict}" + (f":{decision.error}" if decision.error else "")
+                signal.intent = Intent.IGNORE
 
         # 结构突破单带图时，用 deepseek vision 读图上的 trigger/SL/TP，
         # 不再用近期高/低点代理（读图失败才回退代理）。
@@ -251,7 +282,7 @@ class Engine:
                     ref = None
                 lv = read_levels(
                     image_path, signal.symbol, signal.side.value, signal.confirm_tf or "8h",
-                    reference_price=ref, require_ocr=True,
+                    reference_price=ref, ocr_mode="ocr_primary",
                 )
                 if signal.trigger_price is None and lv.get("yellow_or_trigger"):
                     signal.trigger_price = float(lv["yellow_or_trigger"])

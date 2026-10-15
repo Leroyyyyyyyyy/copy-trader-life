@@ -19,7 +19,14 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.chart_ocr import ocr_levels, read_axis_labels
-from src.chart_reader import PROMPT_VERSION, ocr_gate, read_levels_detail
+from src.chart_reader import (
+    OCR_PRIMARY_MIN_VOTES,
+    PROMPT_VERSION,
+    _post_checks,
+    ocr_gate,
+    ocr_primary_gate,
+    read_levels_detail,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 LABELS = ROOT / "experiments" / "fixtures" / "charts" / "popi_2026_09_chart_labels.json"
@@ -27,6 +34,8 @@ IMAGES = ROOT / "data" / "lab" / "popi_images"
 V1 = ROOT / "data" / "lab" / "month_replay" / "chart_levels.json"
 # Stand-in for the live Hyperliquid mark the engine passes (2026-09/10 levels).
 REFERENCE = {"BTC": 80000.0, "ETH": 2500.0, "ZEC": 1350.0, "牛來": 0.11}
+# Held-out (2026-01..08) marks are lower; a stand-in per label set keeps the scale check meaningful.
+HELDOUT_REFERENCE = {"BTC": 70000.0, "ETH": 2000.0, "OIL": 92.0}
 TIMEFRAME = {7683: "2h", 7689: "2h", 7788: "4h", 7801: "4h", 7970: "6h", 7977: "6h", 7995: "6h", 7996: "6h", 8015: "6h"}
 
 
@@ -86,11 +95,19 @@ def _v1() -> dict[int, dict[str, Any]]:
     return out
 
 
-def _v2_one(label: dict[str, Any]) -> dict[str, Any]:
+def _image(label: dict[str, Any]) -> Path:
+    return ROOT / label["image"] if label.get("image") else IMAGES / f"{label['id']}.jpg"
+
+
+def _ref(label: dict[str, Any], table: dict[str, float]) -> Optional[float]:
+    return table.get(label["text_symbol"])
+
+
+def _v2_one(label: dict[str, Any], table: dict[str, float] = REFERENCE) -> dict[str, Any]:
     t0 = time.perf_counter()
     try:
-        d = read_levels_detail(IMAGES / f"{label['id']}.jpg", label["text_symbol"], "buy",
-                               TIMEFRAME.get(label["id"], "8h"), reference_price=REFERENCE[label["text_symbol"]])
+        d = read_levels_detail(_image(label), label["text_symbol"], label.get("side", "buy"),
+                               TIMEFRAME.get(label["id"], "8h"), reference_price=_ref(label, table))
         d["sec"] = round(time.perf_counter() - t0, 1)
         return d
     except Exception as exc:  # noqa: BLE001
@@ -113,37 +130,69 @@ def run(workers: int = 4) -> dict[str, Any]:
             "summary": {"v1": summarize(rows, "v1"), "v2": summarize(rows, "v2")}, "rows": rows}
 
 
-def gate_existing(report_path: Path) -> dict[str, Any]:
-    """v3 = the same v2 vision reads, kept only where an independent OCR read agrees.
-    No new vision calls, so v2 and v3 differ only by the gate."""
-    report = json.loads(report_path.read_text(encoding="utf-8"))
+def add_gates(report: dict[str, Any], table: dict[str, float] = REFERENCE) -> dict[str, Any]:
+    """v3 = vision reads kept only where OCR reads the same number (agree).
+    v4 = OCR numbers, vision only confirms which label is which (ocr_primary).
+    Both reuse the same v2 vision reads, so differences come only from the gate."""
     for row in report["rows"]:
+        label = row["label"]
+        side = label.get("side", "buy")
         p2 = row["v2"]["pred"]
         if p2.get("error"):
             p3: dict[str, Any] = {"error": p2["error"]}
+            p4: dict[str, Any] = dict(p3)
         elif not any(p2.get(k) is not None for k in ("entry", "stop_loss", "take_profit")):
             p3 = {"entry": None, "stop_loss": None, "take_profit": None, "rejected": p2.get("rejected")}
+            p4 = dict(p3)
         else:
-            ocr = ocr_levels(read_axis_labels(IMAGES / f"{row['id']}.jpg"), "buy")
+            labels = read_axis_labels(_image(label))
+            ocr = ocr_levels(labels, side)
             gated, why = ocr_gate(p2, ocr)
-            p3 = {**gated, "rejected": (p2.get("rejected") or []) + why,
-                  "ocr_stop": ocr["stop_loss"], "ocr_entries": ocr["entry_candidates"]}
-        row["v3"] = {"pred": p3, "score": score(row["label"], p3)}
+            why += _post_checks(gated, side, p2.get("current_price"), _ref(label, table))
+            p3 = {**gated, "rejected": (p2.get("rejected") or []) + why}
+            g4, why4 = ocr_primary_gate(p2, ocr_levels(labels, side, min_votes=OCR_PRIMARY_MIN_VOTES))
+            why4 += _post_checks(g4, side, p2.get("current_price"), _ref(label, table))
+            p4 = {**g4, "rejected": (p2.get("rejected") or []) + why4}
+        row["v3"] = {"pred": p3, "score": score(label, p3)}
+        row["v4"] = {"pred": p4, "score": score(label, p4)}
         for key in ("v1", "v2"):  # rescore with the current scorer
-            row[key]["score"] = score(row["label"], row[key]["pred"])
-    report["summary"] = {"v1": summarize(report["rows"], "v1"), "v2": summarize(report["rows"], "v2"),
-                         "v3_vision_plus_ocr": summarize(report["rows"], "v3")}
+            if key in row:
+                row[key]["score"] = score(label, row[key]["pred"])
+    report["summary"] = {k: summarize(report["rows"], k) for k in ("v1", "v2") if all(k in r for r in report["rows"])}
+    report["summary"]["v3_vision_plus_ocr"] = summarize(report["rows"], "v3")
+    report["summary"]["v4_ocr_numbers_vision_roles"] = summarize(report["rows"], "v4")
     return report
+
+
+def gate_existing(report_path: Path) -> dict[str, Any]:
+    return add_gates(json.loads(report_path.read_text(encoding="utf-8")))
+
+
+def run_heldout(labels_path: Path, workers: int = 4) -> dict[str, Any]:
+    doc = json.loads(labels_path.read_text(encoding="utf-8"))
+    labels = doc["labels"]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        v2 = list(pool.map(lambda lb: _v2_one(lb, HELDOUT_REFERENCE), labels))
+    rows = [{"id": lb["id"], "label": lb, "v2": {"pred": p, "score": score(lb, p)}} for lb, p in zip(labels, v2)]
+    report = {"labels_version": doc["version"], "v2_prompt_version": PROMPT_VERSION,
+              "reference_prices": HELDOUT_REFERENCE, "rows": rows}
+    return add_gates(report, HELDOUT_REFERENCE)
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Chart reader eval vs hand labels")
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--heldout", type=Path, default=None, help="label file to run v2+v3+v4 on (fresh vision calls)")
     ap.add_argument("--gate-from", type=Path, default=None,
                     help="apply the OCR gate to the v2 reads in an existing report (no vision calls)")
     args = ap.parse_args(argv)
-    report = gate_existing(args.gate_from) if args.gate_from else run(args.workers)
+    if args.heldout:
+        report = run_heldout(args.heldout, args.workers)
+    elif args.gate_from:
+        report = gate_existing(args.gate_from)
+    else:
+        report = run(args.workers)
     blob = json.dumps(report, ensure_ascii=False, indent=1, default=str)
     if args.out:
         args.out.write_text(blob + "\n", encoding="utf-8")

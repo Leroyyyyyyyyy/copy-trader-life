@@ -1,6 +1,12 @@
 # 默认纸交易。实盘还要 LIVE_TRADING=1 且启动时加 --live
 dry_run: true
 
+# 规则解析器判定要动的消息，先让 DeepSeek 判断作者是否真的在给交易指令（src/llm_gate.py）。
+# on_error: skip = 调用失败就不执行（默认）；allow = 失败时按规则解析器执行。
+llm_gate:
+  enabled: true
+  on_error: skip
+
 risk:
   max_usd_per_trade: 50
   max_sol_per_trade: 0.05

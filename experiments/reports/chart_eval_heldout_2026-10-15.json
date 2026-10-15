@@ -1,0 +1,1088 @@
+{
+ "labels_version": "popi_2026_h1.heldout.v1",
+ "v2_prompt_version": "chart.v2",
+ "reference_prices": {
+  "BTC": 70000.0,
+  "ETH": 2000.0,
+  "OIL": 92.0
+ },
+ "rows": [
+  {
+   "id": 5718,
+   "label": {
+    "id": 5718,
+    "image": "data/charts/orig_5718.jpg",
+    "text_symbol": "BTC",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 94557.46,
+    "stop_loss": 98043.56,
+    "take_profit": 83699.53,
+    "current_price": 94835.96,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "BTC",
+    "notes": "current price label is red, below the stop"
+   },
+   "v2": {
+    "pred": {
+     "entry": 94835.96,
+     "stop_loss": 98043.56,
+     "take_profit": 83699.53,
+     "current_price": 94557.46,
+     "raw": {
+      "entry": 94835.96,
+      "stop_loss": 98043.56,
+      "take_profit": 83699.53,
+      "current_price": 94557.46
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 813,
+      "completion_tokens": 529,
+      "total_tokens": 1342,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 480
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 813
+     },
+     "sec": 4.4
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "entry_unconfirmed:vision=94835.96,ocr=[94557.46]",
+      "stop_unconfirmed:vision=98043.56,ocr=4835.96"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_role_unconfirmed:vision=98043.56,ocr=4835.96"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 6014,
+   "label": {
+    "id": 6014,
+    "image": "data/charts/orig_6014.jpg",
+    "text_symbol": "ETH",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 2034.69,
+    "stop_loss": 2155.72,
+    "take_profit": 1781.93,
+    "current_price": 2043.01,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "ETH",
+    "notes": ""
+   },
+   "v2": {
+    "pred": {
+     "entry": 2034.69,
+     "stop_loss": 2155.72,
+     "take_profit": null,
+     "current_price": 2043.01,
+     "raw": {
+      "entry": 2034.69,
+      "stop_loss": 2155.72,
+      "take_profit": null,
+      "current_price": 2043.01
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 862,
+      "completion_tokens": 224,
+      "total_tokens": 1086,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 179
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 862
+     },
+     "sec": 3.3
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": 2034.69,
+     "stop_loss": 2155.72,
+     "take_profit": null,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": 2034.69,
+     "stop_loss": 2155.72,
+     "take_profit": null,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 6059,
+   "label": {
+    "id": 6059,
+    "image": "data/charts/orig_6059.jpg",
+    "text_symbol": "BTC",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 72313.04,
+    "stop_loss": 74218.36,
+    "take_profit": 62409.44,
+    "current_price": 72753.0,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "BTC",
+    "notes": ""
+   },
+   "v2": {
+    "pred": {
+     "entry": 72313.04,
+     "stop_loss": 74218.36,
+     "take_profit": 62409.44,
+     "current_price": 72753.0,
+     "raw": {
+      "entry": 72313.04,
+      "stop_loss": 74218.36,
+      "take_profit": 62409.44,
+      "current_price": 72753.0
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 845,
+      "completion_tokens": 422,
+      "total_tokens": 1267,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 373
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 845
+     },
+     "sec": 3.2
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": 72313.04,
+     "stop_loss": 74218.36,
+     "take_profit": 62409.44,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": 72313.04,
+     "stop_loss": 74218.36,
+     "take_profit": 62409.44,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 6190,
+   "label": {
+    "id": 6190,
+    "image": "data/charts/orig_6190.jpg",
+    "text_symbol": "BTC",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 68792.95,
+    "stop_loss": 71552.26,
+    "take_profit": 60342.55,
+    "current_price": 68633.18,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "BTC",
+    "notes": "another red level label 75,868.37 sits above the stop"
+   },
+   "v2": {
+    "pred": {
+     "entry": 68792.95,
+     "stop_loss": 71552.26,
+     "take_profit": 60342.55,
+     "current_price": 68633.18,
+     "raw": {
+      "entry": 68792.95,
+      "stop_loss": 71552.26,
+      "take_profit": 60342.55,
+      "current_price": 68633.18
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 953,
+      "completion_tokens": 889,
+      "total_tokens": 1842,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 840
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 953
+     },
+     "sec": 6.0
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_unconfirmed:vision=71552.26,ocr=75868.37"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_role_unconfirmed:vision=71552.26,ocr=75868.37"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 6361,
+   "label": {
+    "id": 6361,
+    "image": "data/charts/orig_6361.jpg",
+    "text_symbol": "BTC",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 68300.0,
+    "stop_loss": 70525.43,
+    "take_profit": 60572.67,
+    "current_price": 67834.07,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "BTC",
+    "notes": "another red level label 72,836.21 sits above the stop; text says 68300"
+   },
+   "v2": {
+    "pred": {
+     "entry": 68300.0,
+     "stop_loss": 70525.43,
+     "take_profit": 60572.67,
+     "current_price": 67834.07,
+     "raw": {
+      "entry": 68300.0,
+      "stop_loss": 70525.43,
+      "take_profit": 60572.67,
+      "current_price": 67834.07
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 909,
+      "completion_tokens": 548,
+      "total_tokens": 1457,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 499
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 781
+     },
+     "sec": 3.9
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_unconfirmed:vision=70525.43,ocr=72836.21"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_role_unconfirmed:vision=70525.43,ocr=72836.21"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 6394,
+   "label": {
+    "id": 6394,
+    "image": "data/charts/6394_0.jpg",
+    "text_symbol": "OIL",
+    "kind": "position_tool",
+    "side": "buy",
+    "entry": 92.254,
+    "stop_loss": 85.077,
+    "take_profit": 111.449,
+    "current_price": 94.404,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "OIL",
+    "notes": "crude oil, not on Hyperliquid"
+   },
+   "v2": {
+    "pred": {
+     "entry": 92.254,
+     "stop_loss": 85.073,
+     "take_profit": 111.469,
+     "current_price": 94.404,
+     "raw": {
+      "entry": 92.254,
+      "stop_loss": 85.073,
+      "take_profit": 111.469,
+      "current_price": 94.404
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 606,
+      "completion_tokens": 2208,
+      "total_tokens": 2814,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 2163
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 606
+     },
+     "sec": 13.2
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": false,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "stop_unconfirmed:vision=85.073,ocr=85.077"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": 92.254,
+     "stop_loss": 85.077,
+     "take_profit": 111.449,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 7076,
+   "label": {
+    "id": 7076,
+    "image": "data/charts/7076_0.jpg",
+    "text_symbol": "海力士",
+    "kind": "position_tool",
+    "side": "buy",
+    "entry": 1466.3,
+    "stop_loss": 1338.17104,
+    "take_profit": 1934.17488,
+    "current_price": 1481.11,
+    "entry_labeled": true,
+    "legible": false,
+    "chart_symbol": "海力士",
+    "notes": "stock; tiny labels"
+   },
+   "v2": {
+    "pred": {
+     "entry": 1526.0,
+     "stop_loss": 1382.0,
+     "take_profit": 1890.0,
+     "current_price": 1526.0,
+     "raw": {
+      "entry": 1526.0,
+      "stop_loss": 1382.0,
+      "take_profit": 1890.0,
+      "current_price": 1526.0
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 524,
+      "completion_tokens": 7389,
+      "total_tokens": 7913,
+      "prompt_tokens_details": {
+       "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 7348
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 524
+     },
+     "sec": 42.8
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": false,
+     "stop": "wrong",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": true
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "entry_unconfirmed:vision=1526.0,ocr=[]",
+      "stop_unconfirmed:vision=1382.0,ocr=47.7704"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": false,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "entry_role_unconfirmed:vision=1526.0,ocr=[]",
+      "stop_role_unconfirmed:vision=1382.0,ocr=None"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": false,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 7154,
+   "label": {
+    "id": 7154,
+    "image": "data/charts/orig_7154.jpg",
+    "text_symbol": "BTC",
+    "kind": "position_tool",
+    "side": "sell",
+    "entry": 66056.28,
+    "stop_loss": 68037.25,
+    "take_profit": null,
+    "current_price": 65978.63,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "BTC",
+    "notes": ""
+   },
+   "v2": {
+    "pred": {
+     "entry": 65978.63,
+     "stop_loss": 68037.25,
+     "take_profit": null,
+     "current_price": 66056.28,
+     "raw": {
+      "entry": 65978.63,
+      "stop_loss": 68037.25,
+      "take_profit": null,
+      "current_price": 66056.28
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 541,
+      "completion_tokens": 10232,
+      "total_tokens": 10773,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 10187
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 413
+     },
+     "sec": 58.7
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "entry_unconfirmed:vision=65978.63,ocr=[66056.28]"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": 66056.28,
+     "stop_loss": 68037.25,
+     "take_profit": null,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 7217,
+   "label": {
+    "id": 7217,
+    "image": "data/charts/orig_7217.jpg",
+    "text_symbol": "ETH",
+    "kind": "position_tool",
+    "side": "buy",
+    "entry": 1874.35,
+    "stop_loss": 1799.82,
+    "take_profit": 2200.9,
+    "current_price": 1868.66,
+    "entry_labeled": true,
+    "legible": true,
+    "chart_symbol": "ETH",
+    "notes": "text also says stop 1800"
+   },
+   "v2": {
+    "pred": {
+     "entry": 1868.66,
+     "stop_loss": 1799.82,
+     "take_profit": 2200.9,
+     "current_price": 1874.35,
+     "raw": {
+      "entry": 1868.66,
+      "stop_loss": 1799.82,
+      "take_profit": 2200.9,
+      "current_price": 1874.35
+     },
+     "ocr": null,
+     "is_price_chart": true,
+     "rejected": [],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 1046,
+      "completion_tokens": 167,
+      "total_tokens": 1213,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 118
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 918
+     },
+     "sec": 2.0
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": false,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "entry_unconfirmed:vision=1868.66,ocr=[1874.35]"
+     ]
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "missing",
+     "stop_exact": false,
+     "entry_ok": false,
+     "tp_ok": false,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": 1874.35,
+     "stop_loss": 1799.82,
+     "take_profit": 2200.9,
+     "rejected": []
+    },
+    "score": {
+     "bucket": "chart",
+     "scored": true,
+     "stop": "correct",
+     "stop_exact": true,
+     "entry_ok": true,
+     "tp_ok": true,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 5847,
+   "label": {
+    "id": 5847,
+    "image": "data/charts/5847_0.jpg",
+    "text_symbol": "BTC",
+    "kind": "not_chart",
+    "side": "buy",
+    "entry": null,
+    "stop_loss": null,
+    "take_profit": null,
+    "current_price": null,
+    "entry_labeled": false,
+    "legible": true,
+    "chart_symbol": null,
+    "notes": "not a price chart"
+   },
+   "v2": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "current_price": null,
+     "raw": {
+      "entry": null,
+      "stop_loss": null,
+      "take_profit": null,
+      "current_price": null
+     },
+     "ocr": null,
+     "is_price_chart": false,
+     "rejected": [
+      "not_a_price_chart"
+     ],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 626,
+      "completion_tokens": 55,
+      "total_tokens": 681,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 22
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 498
+     },
+     "sec": 1.5
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "not_a_price_chart"
+     ]
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "not_a_price_chart"
+     ]
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   }
+  },
+  {
+   "id": 72171,
+   "label": {
+    "id": 72171,
+    "image": "data/charts/7217_1.jpg",
+    "text_symbol": "ETH",
+    "kind": "pnl_screenshot",
+    "side": "buy",
+    "entry": null,
+    "stop_loss": null,
+    "take_profit": null,
+    "current_price": null,
+    "entry_labeled": false,
+    "legible": true,
+    "chart_symbol": null,
+    "notes": "not a price chart"
+   },
+   "v2": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "current_price": null,
+     "raw": {
+      "entry": null,
+      "stop_loss": null,
+      "take_profit": null,
+      "current_price": null
+     },
+     "ocr": null,
+     "is_price_chart": false,
+     "rejected": [
+      "not_a_price_chart"
+     ],
+     "prompt_version": "chart.v2",
+     "usage": {
+      "prompt_tokens": 672,
+      "completion_tokens": 67,
+      "total_tokens": 739,
+      "prompt_tokens_details": {
+       "cached_tokens": 128
+      },
+      "completion_tokens_details": {
+       "reasoning_tokens": 34
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 544
+     },
+     "sec": 1.8
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   },
+   "v3": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "not_a_price_chart"
+     ]
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   },
+   "v4": {
+    "pred": {
+     "entry": null,
+     "stop_loss": null,
+     "take_profit": null,
+     "rejected": [
+      "not_a_price_chart"
+     ]
+    },
+    "score": {
+     "bucket": "non_chart",
+     "ok": true,
+     "dangerous": false
+    }
+   }
+  }
+ ],
+ "summary": {
+  "v2": {
+   "charts_scored": 8,
+   "stop_correct": 8,
+   "stop_exact": 7,
+   "stop_missing": 0,
+   "stop_wrong": 0,
+   "entry_correct": 7,
+   "tp_correct": 7,
+   "errors": 0,
+   "non_chart_clean": "2/2",
+   "symbol_mismatch_rejected": "0/0",
+   "dangerous": 1
+  },
+  "v3_vision_plus_ocr": {
+   "charts_scored": 8,
+   "stop_correct": 2,
+   "stop_exact": 2,
+   "stop_missing": 6,
+   "stop_wrong": 0,
+   "entry_correct": 2,
+   "tp_correct": 2,
+   "errors": 0,
+   "non_chart_clean": "2/2",
+   "symbol_mismatch_rejected": "0/0",
+   "dangerous": 0
+  },
+  "v4_ocr_numbers_vision_roles": {
+   "charts_scored": 8,
+   "stop_correct": 5,
+   "stop_exact": 5,
+   "stop_missing": 3,
+   "stop_wrong": 0,
+   "entry_correct": 5,
+   "tp_correct": 4,
+   "errors": 0,
+   "non_chart_clean": "2/2",
+   "symbol_mismatch_rejected": "0/0",
+   "dangerous": 0
+  }
+ }
+}
